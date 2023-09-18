@@ -26,7 +26,6 @@ import {
 	insert,
 } from '@wordpress/rich-text';
 import { useMergeRefs } from '@wordpress/compose';
-import { __unstableStripHTML as stripHTML } from '@wordpress/dom';
 
 /**
  * Internal dependencies
@@ -170,7 +169,7 @@ function PostTitle( _, forwardedRef ) {
 				( firstBlock.name === 'core/heading' ||
 					firstBlock.name === 'core/paragraph' )
 			) {
-				onUpdate( stripHTML( firstBlock.attributes.content ) );
+				onUpdate( firstBlock.attributes.content );
 				onInsertBlockAfter( content.slice( 1 ) );
 			} else {
 				onInsertBlockAfter( content );
@@ -180,10 +179,7 @@ function PostTitle( _, forwardedRef ) {
 				...create( { html: title } ),
 				...selection,
 			};
-			const newValue = insert(
-				value,
-				create( { html: stripHTML( content ) } )
-			);
+			const newValue = insert( value, create( { html: content } ) );
 			onUpdate( toHTMLString( { value: newValue } ) );
 			setSelection( {
 				start: newValue.start,
