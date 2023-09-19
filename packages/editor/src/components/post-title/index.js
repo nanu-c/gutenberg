@@ -199,6 +199,7 @@ function PostTitle( _, forwardedRef ) {
 	);
 	const decodedPlaceholder =
 		decodeEntities( placeholder ) || __( 'Add title' );
+
 	const { ref: richTextRef } = useRichText( {
 		value: title,
 		onChange,
@@ -217,7 +218,7 @@ function PostTitle( _, forwardedRef ) {
 				};
 			} );
 		},
-		__unstableDisableFormats: true,
+		__unstableDisableFormats: false,
 		preserveWhiteSpace: true,
 	} );
 
