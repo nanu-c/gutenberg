@@ -18,7 +18,7 @@ import { decodeEntities } from '@wordpress/html-entities';
 import { ENTER } from '@wordpress/keycodes';
 import { useSelect, useDispatch } from '@wordpress/data';
 import { pasteHandler } from '@wordpress/blocks';
-import { store as blockEditorStore } from '@wordpress/block-editor';
+import { store as blockEditorStore, PlainText } from '@wordpress/block-editor';
 import {
 	__unstableUseRichText as useRichText,
 	create,
@@ -38,7 +38,7 @@ import { store as editorStore } from '../../store';
  */
 const REGEXP_NEWLINES = /[\r\n]+/g;
 
-function PostTitle( _, forwardedRef ) {
+function PostTitle( { rawText }, forwardedRef ) {
 	const ref = useRef();
 	const [ isSelected, setIsSelected ] = useState( false );
 	const { editPost } = useDispatch( editorStore );
@@ -222,11 +222,29 @@ function PostTitle( _, forwardedRef ) {
 		preserveWhiteSpace: true,
 	} );
 
+	const richEditorRef = useMergeRefs( [ richTextRef, ref ] );
+
+	// Setting to "2" will not render raw HTML.
+	const plainTextVersion = 1;
+
+	if ( rawText ) {
+		return (
+			<PlainText
+				ref={ ref }
+				__experimentalVersion={ plainTextVersion }
+				value={ title }
+				onChange={ onChange }
+				placeholder={ decodedPlaceholder }
+				className={ className }
+			/>
+		);
+	}
+
 	/* eslint-disable jsx-a11y/heading-has-content, jsx-a11y/no-noninteractive-element-to-interactive-role */
 	return (
 		<PostTypeSupportCheck supportKeys="title">
 			<h1
-				ref={ useMergeRefs( [ richTextRef, ref ] ) }
+				ref={ richEditorRef }
 				contentEditable
 				className={ className }
 				aria-label={ decodedPlaceholder }

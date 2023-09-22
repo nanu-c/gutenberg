@@ -37,7 +37,7 @@ export default function TextEditor() {
 				</div>
 			) }
 			<div className="edit-post-text-editor__body">
-				<PostTitle />
+				<PostTitle rawText />
 				<PostTextEditor />
 			</div>
 		</div>
