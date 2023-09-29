@@ -81,5 +81,26 @@ test.describe( 'Post title', () => {
 				'I am <em>emphasis</em> I am <strong>bold</strong> I am <a href="#">anchor</a>'
 			);
 		} );
+
+		test( 'it should render HTML in plaintext if pasted as plaintext', async ( {
+			editor,
+			pageUtils,
+		} ) => {
+			const pageTitleField = editor.canvas.getByRole( 'textbox', {
+				name: 'Add title',
+			} );
+
+			await expect( pageTitleField ).toBeFocused();
+
+			pageUtils.setClipboardData( {
+				plainText:
+					'I am <em>emphasis</em> I am <strong>bold</strong> I am <a href="#">anchor</a>',
+			} );
+			await pageUtils.pressKeys( 'primary+v' );
+
+			await expect( pageTitleField ).toHaveText(
+				'I am <em>emphasis</em> I am <strong>bold</strong> I am <a href="#">anchor</a>'
+			);
+		} );
 	} );
 } );
