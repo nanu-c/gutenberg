@@ -650,14 +650,18 @@
 				"type": "object",
 				"properties": {
 					"name": {
-						"type": "string"
+						"type": "string",
+						"pattern": "^[a-z][a-z0-9-]*/[a-z][a-z0-9-]*$",
+						"description": "The unique and machine-readable name."
 					},
 					"label": {
-						"type": "string"
+						"type": "string",
+						"description": "A human-readable block style label."
 					},
 					"isDefault": {
 						"type": "boolean",
-						"default": false
+						"default": false,
+						"description": "Indicates whether the current block style is the default one."
 					}
 				},
 				"required": [ "name", "label" ],
