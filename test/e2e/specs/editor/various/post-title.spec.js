@@ -157,9 +157,8 @@ test.describe( 'Post title', () => {
 			} );
 
 			pageUtils.setClipboardData( {
-				plainText:
-					'I am <em>emphasis</em> I am <strong>bold</strong> I am <a href="#">anchor</a>',
-				html: 'I am <em>emphasis</em> I am <strong>bold</strong> I am <a href="#">anchor</a>',
+				plainText: 'hello plain',
+				html: 'hello html',
 			} );
 
 			// focus on the title field
@@ -170,6 +169,54 @@ test.describe( 'Post title', () => {
 			await expect( pageTitleField ).toHaveText(
 				'I am <em>emphasis</em> I am <strong>bold</strong> I am <a href="#">anchor</a>'
 			);
+		} );
+
+		test( 'should strip HTML tags from block contents when pasted text is transformed to blocks', async ( {
+			editor,
+			admin,
+			pageUtils,
+		} ) => {
+			await admin.createNewPost();
+
+			const pageTitleField = editor.canvas.getByRole( 'textbox', {
+				name: 'Add title',
+			} );
+
+			await expect( pageTitleField ).toBeFocused();
+
+			// This HTML will ultimately be parsed into two blocks
+			// The first will have it's `content` attribute stripped of HTML
+			// and used as the Page Title.
+			// The second will be inserted into the post contents and will
+			// retain its HTML.
+			pageUtils.setClipboardData( {
+				html: `
+					<h2>I am heading block title with <strong> HTML tag</strong></h2>
+					<p>And I am the rest of titles with <em>emphasis tag</em>!</p>
+				`,
+			} );
+			await pageUtils.pressKeys( 'primary+v' );
+
+			// Check the HTML elements have been stripped from the first block's
+			// `content` attribute...
+			await expect( pageTitleField ).toHaveText(
+				'I am heading block title with HTML tag'
+			);
+
+			// ...and are not rendered.
+			await expect( pageTitleField.locator( 'css=strong' ) ).toBeHidden();
+
+			// Check the 2nd block ended up in the post contents and did not
+			// have its HTML stripped out.
+			await expect.poll( editor.getBlocks ).toMatchObject( [
+				{
+					name: 'core/paragraph',
+					attributes: {
+						content:
+							'And I am the rest of titles with <em>emphasis tag</em>!',
+					},
+				},
+			] );
 		} );
 	} );
 } );
