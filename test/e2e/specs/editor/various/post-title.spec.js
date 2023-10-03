@@ -4,10 +4,6 @@
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
 
 test.describe( 'Post title', () => {
-	test.beforeEach( async ( { admin } ) => {
-		await admin.createNewPost();
-	} );
-
 	test.describe( 'HTML handling', () => {
 		test( `should (visually) render any HTML in Post Editor's post title field when in Visual editing mode`, async ( {
 			page,
