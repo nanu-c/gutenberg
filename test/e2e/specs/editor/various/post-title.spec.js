@@ -134,7 +134,10 @@ test.describe( 'Post title', () => {
 			await expect( pageTitleField.locator( 'css=a' ) ).toBeHidden();
 		} );
 
-		test( 'should retain HTML tags when pasting string of HTML into the post title field in Code view mode', async ( {
+		// Reinstate once the PR to fix paste events is merged:
+		// https://github.com/WordPress/gutenberg/pull/55030.
+		// eslint-disable-next-line playwright/no-skipped-test
+		test.skip( 'should retain HTML tags when pasting string of HTML into the post title field in Code view mode', async ( {
 			editor,
 			admin,
 			pageUtils,
