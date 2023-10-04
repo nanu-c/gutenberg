@@ -18,7 +18,7 @@ import { decodeEntities } from '@wordpress/html-entities';
 import { ENTER } from '@wordpress/keycodes';
 import { useSelect, useDispatch } from '@wordpress/data';
 import { pasteHandler } from '@wordpress/blocks';
-import { store as blockEditorStore, PlainText } from '@wordpress/block-editor';
+import { store as blockEditorStore } from '@wordpress/block-editor';
 import {
 	__unstableUseRichText as useRichText,
 	create,
@@ -27,6 +27,7 @@ import {
 } from '@wordpress/rich-text';
 import { useMergeRefs } from '@wordpress/compose';
 import { __unstableStripHTML as stripHTML } from '@wordpress/dom';
+import { TextareaControl } from '@wordpress/components';
 
 /**
  * Internal dependencies
@@ -199,6 +200,7 @@ function PostTitle( { rawText }, forwardedRef ) {
 		{
 			'is-selected': isSelected,
 			'has-fixed-toolbar': hasFixedToolbar,
+			'is-raw-text': rawText,
 		}
 	);
 	const decodedPlaceholder =
@@ -226,20 +228,21 @@ function PostTitle( { rawText }, forwardedRef ) {
 		preserveWhiteSpace: true,
 	} );
 
-	const richEditorRef = useMergeRefs( [ richTextRef, ref ] );
-
-	// Setting to "2" will not render raw HTML.
-	const plainTextVersion = 1;
+	const richEditorRef = useMergeRefs( [ rawText ? null : richTextRef, ref ] );
 
 	if ( rawText ) {
 		return (
-			<PlainText
-				ref={ ref }
-				__experimentalVersion={ plainTextVersion }
+			<TextareaControl
+				ref={ richEditorRef }
+				__nextHasNoMarginBottom
 				value={ title }
 				onChange={ onChange }
-				placeholder={ decodedPlaceholder }
+				label={ decodedPlaceholder }
+				hideLabelFromVision={ true }
 				className={ className }
+				autoComplete="off"
+				dir="auto"
+				placeholder={ decodedPlaceholder }
 			/>
 		);
 	}
