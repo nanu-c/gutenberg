@@ -263,5 +263,41 @@ test.describe( 'Post title', () => {
 				},
 			] );
 		} );
+
+		test.skip( 'should output HTML tags in plaintext when typed into Post Title field in visual editor mode', async ( {
+			editor,
+			page,
+			admin,
+			pageUtils,
+		} ) => {
+			await admin.createNewPost();
+
+			const pageTitleField = editor.canvas.getByRole( 'textbox', {
+				name: 'Add title',
+			} );
+
+			await expect( pageTitleField ).toBeFocused();
+
+			await page.keyboard.type( 'I am <em>emphasis</em>' );
+
+			await expect( pageTitleField ).toHaveText(
+				'I am <em>emphasis</em>'
+			);
+
+			// Check that the `em` tag was output in plaintext and not rendered.
+			await expect( pageTitleField.locator( 'css=em' ) ).toBeHidden();
+
+			// Switch to code view
+			await pageUtils.pressKeys( 'secondary+M' ); // Emulates CTRL+Shift+Alt + M => toggle code editor
+
+			const codeViewPageTitleField = editor.canvas.getByRole( 'textbox', {
+				name: 'Add title',
+			} );
+
+			// Check that the `em` tag was output in plaintext (HTML entities)
+			await expect( codeViewPageTitleField ).toHaveText(
+				'I am &lt;em&gt;emphasis&lt;/em&gt;'
+			);
+		} );
 	} );
 } );
