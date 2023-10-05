@@ -280,6 +280,8 @@ test.describe( 'Post title', () => {
 
 			await page.keyboard.type( 'I am <em>emphasis</em>' );
 
+			// Expect that manually inputting HTML does not result in any
+			// unexpected transformations into rendered output.
 			await expect( pageTitleField ).toHaveText(
 				'I am <em>emphasis</em>'
 			);
