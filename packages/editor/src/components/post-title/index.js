@@ -280,6 +280,7 @@ function PostTitle( { __unstableRawText: rawText }, forwardedRef ) {
 				title={ title }
 				className={ className }
 				placeholder={ decodedPlaceholder }
+				onChange={ onChange }
 			/>
 		);
 	}
