@@ -228,13 +228,12 @@ function PostTitle( { rawText }, forwardedRef ) {
 		preserveWhiteSpace: true,
 	} );
 
-	const richEditorRef = useMergeRefs( [ rawText ? null : richTextRef, ref ] );
+	const richEditorRef = useMergeRefs( [ richTextRef, ref ] );
 
 	if ( rawText ) {
 		return (
 			<TextareaControl
-				ref={ richEditorRef }
-				__nextHasNoMarginBottom
+				ref={ ref }
 				value={ title }
 				onChange={ onChange }
 				label={ decodedPlaceholder }
@@ -243,6 +242,7 @@ function PostTitle( { rawText }, forwardedRef ) {
 				autoComplete="off"
 				dir="auto"
 				placeholder={ decodedPlaceholder }
+				__nextHasNoMarginBottom
 			/>
 		);
 	}
