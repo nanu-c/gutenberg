@@ -264,7 +264,7 @@ test.describe( 'Post title', () => {
 			] );
 		} );
 
-		test.skip( 'should output HTML tags in plaintext when typed into Post Title field in visual editor mode', async ( {
+		test.skip( 'should output HTML tags in plaintext when added into Post Title field in visual editor mode', async ( {
 			editor,
 			page,
 			admin,
@@ -298,6 +298,66 @@ test.describe( 'Post title', () => {
 			await expect( codeViewPageTitleField ).toHaveText(
 				'I am &lt;em&gt;emphasis&lt;/em&gt;'
 			);
+		} );
+
+		test( 'should output HTML tags in plaintext in visual editor mode when HTML is added in plaintext in code editor mode', async ( {
+			editor,
+			page,
+			admin,
+			pageUtils,
+		} ) => {
+			await admin.createNewPost();
+
+			// switch Editor to code editor mode
+			// Open code editor
+			await pageUtils.pressKeys( 'secondary+M' ); // Emulates CTRL+Shift+Alt + M => toggle code editor
+
+			// Check we're in Code view mode.
+			await expect(
+				editor.canvas.getByRole( 'heading', {
+					name: 'Editing code',
+				} )
+			).toBeVisible();
+
+			const codeViewPageTitleField = editor.canvas.getByRole( 'textbox', {
+				name: 'Add title',
+			} );
+
+			await codeViewPageTitleField.focus();
+
+			// Also verifies that the field handles typing into the field.
+			await page.keyboard.type( 'I am &lt;em&gt;emphasis&lt;/em&gt;' );
+
+			await expect( codeViewPageTitleField ).toHaveText(
+				'I am &lt;em&gt;emphasis&lt;/em&gt;'
+			);
+
+			// Switch to visual view
+			await pageUtils.pressKeys( 'secondary+M' ); // Emulates CTRL+Shift+Alt + M => toggle code editor
+
+			// Wait for canvas iframe to be ready otherwise queries below will fail.
+			await page
+				.frameLocator( '[name=editor-canvas]' )
+				.locator( 'body' )
+				.waitFor();
+
+			const visualViewPageTitleField = editor.canvas.getByRole(
+				'textbox',
+				{
+					name: 'Add title',
+					editable: 'richtext',
+				}
+			);
+
+			// Check that the `em` tag was output in plaintext
+			await expect( visualViewPageTitleField ).toHaveText(
+				'I am <em>emphasis</em>'
+			);
+
+			// Check that no HTML tags were rendered.
+			await expect(
+				visualViewPageTitleField.locator( 'css=em' )
+			).toBeHidden();
 		} );
 	} );
 } );
