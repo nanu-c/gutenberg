@@ -264,7 +264,7 @@ test.describe( 'Post title', () => {
 			] );
 		} );
 
-		test.skip( 'should output HTML tags in plaintext when added into Post Title field in visual editor mode', async ( {
+		test( 'should output HTML tags in plaintext when added into Post Title field in visual editor mode', async ( {
 			editor,
 			page,
 			admin,
@@ -297,8 +297,10 @@ test.describe( 'Post title', () => {
 			} );
 
 			// Check that the `em` tag was output in plaintext (HTML entities)
+			// Note that the `>` is not required to be converted to entity form
+			// (see https://github.com/WordPress/gutenberg/pull/54718/files#r1347124685).
 			await expect( codeViewPageTitleField ).toHaveText(
-				'I am &lt;em&gt;emphasis&lt;/em&gt;'
+				'I am &lt;em>emphasis&lt;/em>'
 			);
 		} );
 
