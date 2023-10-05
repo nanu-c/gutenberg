@@ -203,7 +203,7 @@ const PostTitleRich = forwardRef(
 	}
 );
 
-function PostTitle( { rawText }, forwardedRef ) {
+function PostTitle( { __unstableRawText: rawText }, forwardedRef ) {
 	const ref = useRef();
 
 	const { editPost } = useDispatch( editorStore );
