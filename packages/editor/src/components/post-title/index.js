@@ -40,6 +40,25 @@ import { store as editorStore } from '../../store';
  */
 const REGEXP_NEWLINES = /[\r\n]+/g;
 
+const PostTitleRaw = forwardRef(
+	( { title, placeholder, onChange, className }, ref ) => {
+		return (
+			<TextareaControl
+				ref={ ref }
+				value={ title }
+				onChange={ onChange }
+				label={ placeholder }
+				hideLabelFromVision={ true }
+				className={ className }
+				autoComplete="off"
+				dir="auto"
+				placeholder={ placeholder }
+				__nextHasNoMarginBottom
+			/>
+		);
+	}
+);
+
 function PostTitle( { rawText }, forwardedRef ) {
 	const ref = useRef();
 	const [ isSelected, setIsSelected ] = useState( false );
@@ -232,17 +251,11 @@ function PostTitle( { rawText }, forwardedRef ) {
 
 	if ( rawText ) {
 		return (
-			<TextareaControl
+			<PostTitleRaw
 				ref={ ref }
-				value={ title }
-				onChange={ onChange }
-				label={ decodedPlaceholder }
-				hideLabelFromVision={ true }
+				title={ title }
 				className={ className }
-				autoComplete="off"
-				dir="auto"
 				placeholder={ decodedPlaceholder }
-				__nextHasNoMarginBottom
 			/>
 		);
 	}
