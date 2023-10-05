@@ -174,7 +174,7 @@ test.describe( 'Post title', () => {
 			);
 		} );
 
-		test( 'should strip HTML tags from block contents when pasted text is transformed to blocks', async ( {
+		test( 'should strip HTML tags from Post Title when pasted text is transformed to blocks', async ( {
 			editor,
 			admin,
 			pageUtils,
