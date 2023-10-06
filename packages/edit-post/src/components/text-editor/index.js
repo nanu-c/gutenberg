@@ -3,7 +3,7 @@
  */
 import {
 	PostTextEditor,
-	PostTitle,
+	PostTitleRaw,
 	store as editorStore,
 } from '@wordpress/editor';
 import { Button } from '@wordpress/components';
@@ -37,7 +37,7 @@ export default function TextEditor() {
 				</div>
 			) }
 			<div className="edit-post-text-editor__body">
-				<PostTitle __unstableRawText />
+				<PostTitleRaw />
 				<PostTextEditor />
 			</div>
 		</div>
