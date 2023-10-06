@@ -99,7 +99,6 @@ test.describe( 'Post title', () => {
 
 		test( `should show raw HTML in the post title field when in Code view mode `, async ( {
 			page,
-			editor,
 			admin,
 			requestUtils,
 			pageUtils,
@@ -131,12 +130,12 @@ test.describe( 'Post title', () => {
 
 			// Check we're in Code view mode.
 			await expect(
-				editor.canvas.getByRole( 'heading', {
+				page.getByRole( 'heading', {
 					name: 'Editing code',
 				} )
 			).toBeVisible();
 
-			const codeViewPageTitleField = editor.canvas.getByRole( 'textbox', {
+			const codeViewPageTitleField = page.getByRole( 'textbox', {
 				name: 'Add title',
 			} );
 
@@ -292,7 +291,7 @@ test.describe( 'Post title', () => {
 			// Switch to code view
 			await pageUtils.pressKeys( 'secondary+M' ); // Emulates CTRL+Shift+Alt + M => toggle code editor
 
-			const codeViewPageTitleField = editor.canvas.getByRole( 'textbox', {
+			const codeViewPageTitleField = page.getByRole( 'textbox', {
 				name: 'Add title',
 			} );
 
@@ -318,12 +317,12 @@ test.describe( 'Post title', () => {
 
 			// Check we're in Code view mode.
 			await expect(
-				editor.canvas.getByRole( 'heading', {
+				page.getByRole( 'heading', {
 					name: 'Editing code',
 				} )
 			).toBeVisible();
 
-			const codeViewPageTitleField = editor.canvas.getByRole( 'textbox', {
+			const codeViewPageTitleField = page.getByRole( 'textbox', {
 				name: 'Add title',
 			} );
 
@@ -338,12 +337,6 @@ test.describe( 'Post title', () => {
 
 			// Switch to visual view
 			await pageUtils.pressKeys( 'secondary+M' ); // Emulates CTRL+Shift+Alt + M => toggle code editor
-
-			// Wait for canvas iframe to be ready otherwise queries below will fail.
-			await page
-				.frameLocator( '[name=editor-canvas]' )
-				.locator( 'body' )
-				.waitFor();
 
 			const visualViewPageTitleField = editor.canvas.getByRole(
 				'textbox',
