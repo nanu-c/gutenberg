@@ -177,7 +177,7 @@ test.describe( 'Post title', () => {
 		// https://github.com/WordPress/gutenberg/pull/55030.
 		// eslint-disable-next-line playwright/no-skipped-test
 		test.skip( 'should retain HTML tags when pasting string of HTML into the post title field in Code view mode', async ( {
-			editor,
+			page,
 			admin,
 			pageUtils,
 		} ) => {
@@ -189,12 +189,12 @@ test.describe( 'Post title', () => {
 
 			// Check we're in Code view mode.
 			await expect(
-				editor.canvas.getByRole( 'heading', {
+				page.getByRole( 'heading', {
 					name: 'Editing code',
 				} )
 			).toBeVisible();
 
-			const pageTitleField = editor.canvas.getByRole( 'textbox', {
+			const pageTitleField = page.getByRole( 'textbox', {
 				name: 'Add title',
 			} );
 
