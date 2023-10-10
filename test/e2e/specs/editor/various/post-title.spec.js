@@ -18,11 +18,9 @@ test.describe( 'Post title', () => {
 			await expect( pageTitleField ).toBeFocused();
 		} );
 
-		// Known bug. Will need TextareaControl to expose a ref for this to
-		// work.
-		// eslint-disable-next-line playwright/no-skipped-test
-		test.skip( 'should focus on the post title field when creating a new post in code editor mode', async ( {
-			editor,
+		test( 'should focus on the post title field when creating a new post in code editor mode', async ( {
+			page,
+
 			admin,
 			pageUtils,
 		} ) => {
@@ -34,12 +32,12 @@ test.describe( 'Post title', () => {
 
 			// Check we're in Code view mode.
 			await expect(
-				editor.canvas.getByRole( 'heading', {
+				page.getByRole( 'heading', {
 					name: 'Editing code',
 				} )
 			).toBeVisible();
 
-			const pageTitleField = editor.canvas.getByRole( 'textbox', {
+			const pageTitleField = page.getByRole( 'textbox', {
 				name: 'Add title',
 			} );
 
