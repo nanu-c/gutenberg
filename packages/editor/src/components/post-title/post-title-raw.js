@@ -11,15 +11,16 @@ import { __ } from '@wordpress/i18n';
 import { decodeEntities } from '@wordpress/html-entities';
 import { useSelect, useDispatch } from '@wordpress/data';
 import { store as blockEditorStore } from '@wordpress/block-editor';
-import { useState } from '@wordpress/element';
+import { useState, forwardRef } from '@wordpress/element';
 
 /**
  * Internal dependencies
  */
 import { store as editorStore } from '../../store';
 import { DEFAULT_CLASSNAMES, REGEXP_NEWLINES } from './constants';
+import usePostTitleFocus from './use-post-title-focus';
 
-const PostTitleRaw = () => {
+function PostTitleRaw( _, forwardedRef ) {
 	const { editPost } = useDispatch( editorStore );
 	const { title, placeholder, hasFixedToolbar } = useSelect( ( select ) => {
 		const { getEditedPostAttribute } = select( editorStore );
@@ -35,6 +36,8 @@ const PostTitleRaw = () => {
 	}, [] );
 
 	const [ isSelected, setIsSelected ] = useState( false );
+
+	const { ref: focusRef } = usePostTitleFocus( forwardedRef );
 
 	function onUpdate( newTitle ) {
 		editPost( { title: newTitle } );
@@ -65,6 +68,7 @@ const PostTitleRaw = () => {
 
 	return (
 		<TextareaControl
+			ref={ focusRef }
 			value={ title }
 			onChange={ onChange }
 			onFocus={ onSelect }
@@ -78,6 +82,6 @@ const PostTitleRaw = () => {
 			__nextHasNoMarginBottom
 		/>
 	);
-};
+}
 
-export default PostTitleRaw;
+export default forwardRef( PostTitleRaw );
