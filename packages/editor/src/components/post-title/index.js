@@ -9,7 +9,7 @@ import classnames from 'classnames';
 import { __ } from '@wordpress/i18n';
 import { forwardRef, useState } from '@wordpress/element';
 import { decodeEntities } from '@wordpress/html-entities';
-import { useSelect, useDispatch } from '@wordpress/data';
+import { useSelect } from '@wordpress/data';
 import { store as blockEditorStore } from '@wordpress/block-editor';
 
 /**
@@ -19,10 +19,11 @@ import { store as editorStore } from '../../store';
 import PostTitleRich from './post-title-rich';
 import { DEFAULT_CLASSNAMES, REGEXP_NEWLINES } from './constants';
 import usePostTitleFocus from './use-post-title-focus';
+import usePostTitle from './use-post-title';
 
 function PostTitle( _, forwardedRef ) {
-	const { editPost } = useDispatch( editorStore );
-	const { title, placeholder, hasFixedToolbar } = useSelect( ( select ) => {
+	// const { editPost } = useDispatch( editorStore );
+	const { placeholder, hasFixedToolbar } = useSelect( ( select ) => {
 		const { getEditedPostAttribute } = select( editorStore );
 		const { getSettings } = select( blockEditorStore );
 		const { titlePlaceholder, hasFixedToolbar: _hasFixedToolbar } =
@@ -39,9 +40,7 @@ function PostTitle( _, forwardedRef ) {
 
 	const { ref: focusRef } = usePostTitleFocus( forwardedRef );
 
-	function onUpdate( newTitle ) {
-		editPost( { title: newTitle } );
-	}
+	const { title, setTitle: onUpdate } = usePostTitle();
 
 	function onChange( value ) {
 		onUpdate( value.replace( REGEXP_NEWLINES, ' ' ) );

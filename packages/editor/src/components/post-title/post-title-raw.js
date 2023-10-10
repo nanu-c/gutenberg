@@ -9,27 +9,24 @@ import classnames from 'classnames';
 import { TextareaControl } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import { decodeEntities } from '@wordpress/html-entities';
-import { useSelect, useDispatch } from '@wordpress/data';
+import { useSelect } from '@wordpress/data';
 import { store as blockEditorStore } from '@wordpress/block-editor';
 import { useState, forwardRef } from '@wordpress/element';
 
 /**
  * Internal dependencies
  */
-import { store as editorStore } from '../../store';
 import { DEFAULT_CLASSNAMES, REGEXP_NEWLINES } from './constants';
 import usePostTitleFocus from './use-post-title-focus';
+import usePostTitle from './use-post-title';
 
 function PostTitleRaw( _, forwardedRef ) {
-	const { editPost } = useDispatch( editorStore );
-	const { title, placeholder, hasFixedToolbar } = useSelect( ( select ) => {
-		const { getEditedPostAttribute } = select( editorStore );
+	const { placeholder, hasFixedToolbar } = useSelect( ( select ) => {
 		const { getSettings } = select( blockEditorStore );
 		const { titlePlaceholder, hasFixedToolbar: _hasFixedToolbar } =
 			getSettings();
 
 		return {
-			title: getEditedPostAttribute( 'title' ),
 			placeholder: titlePlaceholder,
 			hasFixedToolbar: _hasFixedToolbar,
 		};
@@ -37,11 +34,8 @@ function PostTitleRaw( _, forwardedRef ) {
 
 	const [ isSelected, setIsSelected ] = useState( false );
 
+	const { title, setTitle: onUpdate } = usePostTitle();
 	const { ref: focusRef } = usePostTitleFocus( forwardedRef );
-
-	function onUpdate( newTitle ) {
-		editPost( { title: newTitle } );
-	}
 
 	function onChange( value ) {
 		onUpdate( value.replace( REGEXP_NEWLINES, ' ' ) );
