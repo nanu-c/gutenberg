@@ -216,19 +216,6 @@ function gutenberg_pre_init() {
 		return;
 	}
 
-	// Get unmodified $wp_version.
-	include ABSPATH . WPINC . '/version.php';
-
-	// Strip '-src' from the version string. Messes up version_compare().
-	$version = str_replace( '-src', '', $wp_version );
-
-	// Compare against major release versions (X.Y) rather than minor (X.Y.Z)
-	// unless a minor release is the actual minimum requirement. WordPress reports
-	// X.Y for its major releases.
-	if ( version_compare( $version, '5.9', '<' ) ) {
-		add_action( 'admin_notices', 'gutenberg_wordpress_version_notice' );
-		return;
-	}
-
+	// Load the plugin.
 	require_once __DIR__ . '/lib/load.php';
 }
