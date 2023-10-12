@@ -1,63 +1,72 @@
 /**
- * External dependencies
- */
-import { includes, map, without } from 'lodash';
-
-/**
  * WordPress dependencies
  */
-import { useContext, useMemo } from '@wordpress/element';
-import { withSelect, withDispatch } from '@wordpress/data';
-import { compose, withInstanceId } from '@wordpress/compose';
+import { useMemo, useCallback } from '@wordpress/element';
+import { useDispatch, useSelect } from '@wordpress/data';
+import { useInstanceId } from '@wordpress/compose';
 import { CheckboxControl } from '@wordpress/components';
+import { store as editorStore } from '@wordpress/editor';
 
 /**
  * Internal dependencies
  */
 import BlockTypesChecklist from './checklist';
-import EditPostSettings from '../edit-post-settings';
 import { store as editPostStore } from '../../store';
 
-function BlockManagerCategory( {
-	instanceId,
-	title,
-	blockTypes,
-	hiddenBlockTypes,
-	toggleVisible,
-	toggleAllVisible,
-} ) {
-	const settings = useContext( EditPostSettings );
-	const { allowedBlockTypes } = settings;
+function BlockManagerCategory( { title, blockTypes } ) {
+	const instanceId = useInstanceId( BlockManagerCategory );
+	const { defaultAllowedBlockTypes, hiddenBlockTypes } = useSelect(
+		( select ) => {
+			const { getEditorSettings } = select( editorStore );
+			const { getHiddenBlockTypes } = select( editPostStore );
+			return {
+				defaultAllowedBlockTypes:
+					getEditorSettings().defaultAllowedBlockTypes,
+				hiddenBlockTypes: getHiddenBlockTypes(),
+			};
+		},
+		[]
+	);
 	const filteredBlockTypes = useMemo( () => {
-		if ( allowedBlockTypes === true ) {
+		if ( defaultAllowedBlockTypes === true ) {
 			return blockTypes;
 		}
 		return blockTypes.filter( ( { name } ) => {
-			return includes( allowedBlockTypes || [], name );
+			return defaultAllowedBlockTypes?.includes( name );
 		} );
-	}, [ allowedBlockTypes, blockTypes ] );
+	}, [ defaultAllowedBlockTypes, blockTypes ] );
+	const { showBlockTypes, hideBlockTypes } = useDispatch( editPostStore );
+	const toggleVisible = useCallback( ( blockName, nextIsChecked ) => {
+		if ( nextIsChecked ) {
+			showBlockTypes( blockName );
+		} else {
+			hideBlockTypes( blockName );
+		}
+	}, [] );
+	const toggleAllVisible = useCallback(
+		( nextIsChecked ) => {
+			const blockNames = blockTypes.map( ( { name } ) => name );
+			if ( nextIsChecked ) {
+				showBlockTypes( blockNames );
+			} else {
+				hideBlockTypes( blockNames );
+			}
+		},
+		[ blockTypes ]
+	);
 
 	if ( ! filteredBlockTypes.length ) {
 		return null;
 	}
 
-	const checkedBlockNames = without(
-		map( filteredBlockTypes, 'name' ),
-		...hiddenBlockTypes
-	);
+	const checkedBlockNames = filteredBlockTypes
+		.map( ( { name } ) => name )
+		.filter( ( type ) => ! hiddenBlockTypes.includes( type ) );
 
 	const titleId = 'edit-post-block-manager__category-title-' + instanceId;
 
 	const isAllChecked = checkedBlockNames.length === filteredBlockTypes.length;
-
-	let ariaChecked;
-	if ( isAllChecked ) {
-		ariaChecked = 'true';
-	} else if ( checkedBlockNames.length > 0 ) {
-		ariaChecked = 'mixed';
-	} else {
-		ariaChecked = 'false';
-	}
+	const isIndeterminate = ! isAllChecked && checkedBlockNames.length > 0;
 
 	return (
 		<div
@@ -66,10 +75,11 @@ function BlockManagerCategory( {
 			className="edit-post-block-manager__category"
 		>
 			<CheckboxControl
+				__nextHasNoMarginBottom
 				checked={ isAllChecked }
 				onChange={ toggleAllVisible }
 				className="edit-post-block-manager__category-title"
-				aria-checked={ ariaChecked }
+				indeterminate={ isIndeterminate }
 				label={ <span id={ titleId }>{ title }</span> }
 			/>
 			<BlockTypesChecklist
@@ -81,34 +91,4 @@ function BlockManagerCategory( {
 	);
 }
 
-export default compose( [
-	withInstanceId,
-	withSelect( ( select ) => {
-		const { getPreference } = select( editPostStore );
-
-		return {
-			hiddenBlockTypes: getPreference( 'hiddenBlockTypes' ),
-		};
-	} ),
-	withDispatch( ( dispatch, ownProps ) => {
-		const { showBlockTypes, hideBlockTypes } = dispatch( editPostStore );
-
-		return {
-			toggleVisible( blockName, nextIsChecked ) {
-				if ( nextIsChecked ) {
-					showBlockTypes( blockName );
-				} else {
-					hideBlockTypes( blockName );
-				}
-			},
-			toggleAllVisible( nextIsChecked ) {
-				const blockNames = map( ownProps.blockTypes, 'name' );
-				if ( nextIsChecked ) {
-					showBlockTypes( blockNames );
-				} else {
-					hideBlockTypes( blockNames );
-				}
-			},
-		};
-	} ),
-] )( BlockManagerCategory );
+export default BlockManagerCategory;

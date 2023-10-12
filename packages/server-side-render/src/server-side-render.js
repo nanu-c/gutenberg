@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { isEqual } from 'lodash';
+import fastDeepEqual from 'fast-deep-equal/es6';
 
 /**
  * WordPress dependencies
@@ -14,12 +14,35 @@ import { addQueryArgs } from '@wordpress/url';
 import { Placeholder, Spinner } from '@wordpress/components';
 import { __experimentalSanitizeBlockAttributes } from '@wordpress/blocks';
 
+const EMPTY_OBJECT = {};
+
 export function rendererPath( block, attributes = null, urlQueryArgs = {} ) {
 	return addQueryArgs( `/wp/v2/block-renderer/${ block }`, {
 		context: 'edit',
 		...( null !== attributes ? { attributes } : {} ),
 		...urlQueryArgs,
 	} );
+}
+
+export function removeBlockSupportAttributes( attributes ) {
+	const {
+		backgroundColor,
+		borderColor,
+		fontFamily,
+		fontSize,
+		gradient,
+		textColor,
+		className,
+		...restAttributes
+	} = attributes;
+
+	const { border, color, elements, spacing, typography, ...restStyles } =
+		attributes?.style || EMPTY_OBJECT;
+
+	return {
+		...restAttributes,
+		style: restStyles,
+	};
 }
 
 function DefaultEmptyResponsePlaceholder( { className } ) {
@@ -69,6 +92,7 @@ export default function ServerSideRender( props ) {
 		className,
 		httpMethod = 'GET',
 		urlQueryArgs,
+		skipBlockSupportAttributes = false,
 		EmptyResponsePlaceholder = DefaultEmptyResponsePlaceholder,
 		ErrorResponsePlaceholder = DefaultErrorResponsePlaceholder,
 		LoadingResponsePlaceholder = DefaultLoadingResponsePlaceholder,
@@ -78,20 +102,24 @@ export default function ServerSideRender( props ) {
 	const [ showLoader, setShowLoader ] = useState( false );
 	const fetchRequestRef = useRef();
 	const [ response, setResponse ] = useState( null );
-	const prevResponse = usePrevious( response );
 	const prevProps = usePrevious( props );
+	const [ isLoading, setIsLoading ] = useState( false );
 
 	function fetchData() {
 		if ( ! isMountedRef.current ) {
 			return;
 		}
-		if ( null !== response ) {
-			setResponse( null );
-		}
 
-		const sanitizedAttributes =
+		setIsLoading( true );
+
+		let sanitizedAttributes =
 			attributes &&
 			__experimentalSanitizeBlockAttributes( block, attributes );
+
+		if ( skipBlockSupportAttributes ) {
+			sanitizedAttributes =
+				removeBlockSupportAttributes( sanitizedAttributes );
+		}
 
 		// If httpMethod is 'POST', send the attributes in the request body instead of the URL.
 		// This allows sending a larger attributes object than in a GET request, where the attributes are in the URL.
@@ -130,6 +158,14 @@ export default function ServerSideRender( props ) {
 						errorMsg: error.message,
 					} );
 				}
+			} )
+			.finally( () => {
+				if (
+					isMountedRef.current &&
+					fetchRequest === fetchRequestRef.current
+				) {
+					setIsLoading( false );
+				}
 			} ) );
 
 		return fetchRequest;
@@ -148,10 +184,10 @@ export default function ServerSideRender( props ) {
 
 	useEffect( () => {
 		// Don't debounce the first fetch. This ensures that the first render
-		// shows data as soon as possible
+		// shows data as soon as possible.
 		if ( prevProps === undefined ) {
 			fetchData();
-		} else if ( ! isEqual( prevProps, props ) ) {
+		} else if ( ! fastDeepEqual( prevProps, props ) ) {
 			debouncedFetchData();
 		}
 	} );
@@ -162,29 +198,34 @@ export default function ServerSideRender( props ) {
 	 * the request takes more than one second.
 	 */
 	useEffect( () => {
-		if ( response !== null ) {
+		if ( ! isLoading ) {
 			return;
 		}
 		const timeout = setTimeout( () => {
 			setShowLoader( true );
 		}, 1000 );
 		return () => clearTimeout( timeout );
-	}, [ response ] );
+	}, [ isLoading ] );
 
-	if ( response === '' ) {
-		return <EmptyResponsePlaceholder { ...props } />;
-	} else if ( ! response ) {
+	const hasResponse = !! response;
+	const hasEmptyResponse = response === '';
+	const hasError = response?.error;
+
+	if ( isLoading ) {
 		return (
-			<LoadingResponsePlaceholder
-				{ ...props }
-				showLoader={ ! prevResponse || showLoader }
-			>
-				{ !! prevResponse && (
-					<RawHTML className={ className }>{ prevResponse }</RawHTML>
+			<LoadingResponsePlaceholder { ...props } showLoader={ showLoader }>
+				{ hasResponse && (
+					<RawHTML className={ className }>{ response }</RawHTML>
 				) }
 			</LoadingResponsePlaceholder>
 		);
-	} else if ( response.error ) {
+	}
+
+	if ( hasEmptyResponse || ! hasResponse ) {
+		return <EmptyResponsePlaceholder { ...props } />;
+	}
+
+	if ( hasError ) {
 		return <ErrorResponsePlaceholder response={ response } { ...props } />;
 	}
 

@@ -1,9 +1,9 @@
 /**
  * WordPress dependencies
  */
-import { useSelect } from '@wordpress/data';
-import { getBlockType, withBlockContentContext } from '@wordpress/blocks';
+import { __unstableGetInnerBlocksProps as getInnerBlocksProps } from '@wordpress/blocks';
 import { useRef } from '@wordpress/element';
+import { useSelect } from '@wordpress/data';
 
 /**
  * Internal dependencies
@@ -12,7 +12,7 @@ import ButtonBlockAppender from './button-block-appender';
 import DefaultBlockAppender from './default-block-appender';
 import useNestedSettingsUpdate from './use-nested-settings-update';
 import useInnerBlockTemplateSync from './use-inner-block-template-sync';
-import getBlockContext from './get-block-context';
+import useBlockContext from './use-block-context';
 
 /**
  * Internal dependencies
@@ -23,6 +23,8 @@ import useBlockSync from '../provider/use-block-sync';
 import { BlockContextProvider } from '../block-context';
 import { defaultLayout, LayoutProvider } from '../block-list/layout';
 import { store as blockEditorStore } from '../../store';
+import WarningMaxDepthExceeded from './warning-max-depth-exceeded';
+import { MAX_NESTING_DEPTH } from './constants';
 
 /**
  * This hook is used to lightly mark an element as an inner blocks wrapper
@@ -74,9 +76,15 @@ function UncontrolledInnerBlocks( props ) {
 	const {
 		clientId,
 		allowedBlocks,
+		prioritizedInserterBlocks,
+		defaultBlock,
+		directInsert,
+		__experimentalDefaultBlock,
+		__experimentalDirectInsert,
 		template,
 		templateLock,
 		templateInsertUpdatesSelection,
+		__experimentalCaptureToolbars: captureToolbars,
 		orientation,
 		renderAppender,
 		renderFooterAppender,
@@ -91,16 +99,25 @@ function UncontrolledInnerBlocks( props ) {
 		horizontalAlignment,
 		filterInnerBlocks,
 		blockWidth,
-		__experimentalLayout: layout = defaultLayout,
+		layout = defaultLayout,
 		gridProperties,
 	} = props;
 
-	const block = useSelect(
-		( select ) => select( blockEditorStore ).getBlock( clientId ),
-		[ clientId ]
-	) || { innerBlocks: [] };
+	const context = useBlockContext( clientId );
 
-	useNestedSettingsUpdate( clientId, allowedBlocks, templateLock );
+	useNestedSettingsUpdate(
+		clientId,
+		allowedBlocks,
+		prioritizedInserterBlocks,
+		defaultBlock,
+		directInsert,
+		__experimentalDefaultBlock,
+		__experimentalDirectInsert,
+		templateLock,
+		captureToolbars,
+		orientation,
+		layout
+	);
 
 	useInnerBlockTemplateSync(
 		clientId,
@@ -109,43 +126,42 @@ function UncontrolledInnerBlocks( props ) {
 		templateInsertUpdatesSelection
 	);
 
-	let blockList = (
-		<BlockList
-			marginVertical={ marginVertical }
-			marginHorizontal={ marginHorizontal }
-			rootClientId={ clientId }
-			renderAppender={ renderAppender }
-			renderFooterAppender={ renderFooterAppender }
-			withFooter={ false }
-			orientation={ orientation }
-			parentWidth={ parentWidth }
-			horizontalAlignment={ horizontalAlignment }
-			horizontal={ horizontal }
-			contentResizeMode={ contentResizeMode }
-			contentStyle={ contentStyle }
-			onAddBlock={ onAddBlock }
-			onDeleteBlock={ onDeleteBlock }
-			filterInnerBlocks={ filterInnerBlocks }
-			gridProperties={ gridProperties }
-			blockWidth={ blockWidth }
-		/>
+	const nestingLevel = useSelect(
+		( select ) => {
+			return select( blockEditorStore ).getBlockParents( clientId )
+				?.length;
+		},
+		[ clientId ]
 	);
-
-	// Wrap context provider if (and only if) block has context to provide.
-	const blockType = getBlockType( block.name );
-	if ( blockType && blockType.providesContext ) {
-		const context = getBlockContext( block.attributes, blockType );
-
-		blockList = (
-			<LayoutProvider value={ layout }>
-				<BlockContextProvider value={ context }>
-					{ blockList }
-				</BlockContextProvider>
-			</LayoutProvider>
-		);
+	if ( nestingLevel >= MAX_NESTING_DEPTH ) {
+		return <WarningMaxDepthExceeded clientId={ clientId } />;
 	}
 
-	return blockList;
+	return (
+		<LayoutProvider value={ layout }>
+			<BlockContextProvider value={ context }>
+				<BlockList
+					marginVertical={ marginVertical }
+					marginHorizontal={ marginHorizontal }
+					rootClientId={ clientId }
+					renderAppender={ renderAppender }
+					renderFooterAppender={ renderFooterAppender }
+					withFooter={ false }
+					orientation={ orientation }
+					parentWidth={ parentWidth }
+					horizontalAlignment={ horizontalAlignment }
+					horizontal={ horizontal }
+					contentResizeMode={ contentResizeMode }
+					contentStyle={ contentStyle }
+					onAddBlock={ onAddBlock }
+					onDeleteBlock={ onDeleteBlock }
+					filterInnerBlocks={ filterInnerBlocks }
+					gridProperties={ gridProperties }
+					blockWidth={ blockWidth }
+				/>
+			</BlockContextProvider>
+		</LayoutProvider>
+	);
 }
 
 /**
@@ -189,9 +205,9 @@ const InnerBlocks = ( props ) => {
 InnerBlocks.DefaultBlockAppender = DefaultBlockAppender;
 InnerBlocks.ButtonBlockAppender = ButtonBlockAppender;
 
-InnerBlocks.Content = withBlockContentContext( ( { BlockContent } ) => (
-	<BlockContent />
-) );
+useInnerBlocksProps.save = getInnerBlocksProps;
+
+InnerBlocks.Content = () => useInnerBlocksProps.save().children;
 
 /**
  * @see https://github.com/WordPress/gutenberg/blob/HEAD/packages/block-editor/src/components/inner-blocks/README.md

@@ -12,40 +12,37 @@ const blocksTab = {
 };
 const patternsTab = {
 	name: 'patterns',
-	/* translators: Patterns tab title in the block inserter. */
+	/* translators: Theme and Directory Patterns tab title in the block inserter. */
 	title: __( 'Patterns' ),
 };
-const reusableBlocksTab = {
-	name: 'reusable',
-	/* translators: Reusable blocks tab title in the block inserter. */
-	title: __( 'Reusable' ),
+
+const mediaTab = {
+	name: 'media',
+	/* translators: Media tab title in the block inserter. */
+	title: __( 'Media' ),
 };
 
 function InserterTabs( {
 	children,
 	showPatterns = false,
-	showReusableBlocks = false,
+	showMedia = false,
 	onSelect,
+	prioritizePatterns,
 } ) {
 	const tabs = useMemo( () => {
-		const tempTabs = [ blocksTab ];
-
-		if ( showPatterns ) {
+		const tempTabs = [];
+		if ( prioritizePatterns && showPatterns ) {
 			tempTabs.push( patternsTab );
 		}
-
-		if ( showReusableBlocks ) {
-			tempTabs.push( reusableBlocksTab );
+		tempTabs.push( blocksTab );
+		if ( ! prioritizePatterns && showPatterns ) {
+			tempTabs.push( patternsTab );
 		}
-
+		if ( showMedia ) {
+			tempTabs.push( mediaTab );
+		}
 		return tempTabs;
-	}, [
-		blocksTab,
-		showPatterns,
-		patternsTab,
-		showReusableBlocks,
-		reusableBlocksTab,
-	] );
+	}, [ prioritizePatterns, showPatterns, showMedia ] );
 
 	return (
 		<TabPanel

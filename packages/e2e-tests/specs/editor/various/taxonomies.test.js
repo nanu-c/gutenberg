@@ -1,9 +1,4 @@
 /**
- * External dependencies
- */
-import { random } from 'lodash';
-
-/**
  * WordPress dependencies
  */
 import {
@@ -11,6 +6,7 @@ import {
 	findSidebarPanelWithTitle,
 	openDocumentSettingsSidebar,
 	publishPost,
+	canvas,
 } from '@wordpress/e2e-test-utils';
 
 /**
@@ -18,6 +14,12 @@ import {
  */
 const TAG_TOKEN_SELECTOR =
 	'.components-form-token-field__token-text span:not(.components-visually-hidden)';
+
+function generateRandomNumber() {
+	// Using `Math.random()` directly is fine in this testing context.
+	// eslint-disable-next-line no-restricted-syntax
+	return Math.round( 1 + Math.random() * ( Number.MAX_SAFE_INTEGER - 1 ) );
+}
 
 describe( 'Taxonomies', () => {
 	const canCreatTermInTaxonomy = ( taxonomy ) => {
@@ -71,6 +73,10 @@ describe( 'Taxonomies', () => {
 
 		await openSidebarPanelWithTitle( 'Categories' );
 
+		await page.waitForSelector(
+			'.editor-post-taxonomies__hierarchical-terms-list'
+		);
+
 		// If the user has no permission to add a new category finish the test.
 		if ( ! ( await canCreatTermInTaxonomy( 'categories' ) ) ) {
 			return;
@@ -108,7 +114,7 @@ describe( 'Taxonomies', () => {
 		expect( selectedCategories[ 0 ] ).toEqual( 'z rand category 1' );
 
 		// Type something in the title so we can publish the post.
-		await page.type( '.editor-post-title__input', 'Hello World' );
+		await canvas().type( '.editor-post-title__input', 'Hello World' );
 
 		// Publish the post.
 		await publishPost();
@@ -148,7 +154,7 @@ describe( 'Taxonomies', () => {
 		// Click the tag input field.
 		await tagInput.click();
 
-		const tagName = "tag'-" + random( 1, Number.MAX_SAFE_INTEGER );
+		const tagName = "tag'-" + generateRandomNumber();
 
 		// Type the category name in the field.
 		await tagInput.type( tagName );
@@ -166,7 +172,7 @@ describe( 'Taxonomies', () => {
 		expect( tags[ 0 ] ).toEqual( tagName );
 
 		// Type something in the title so we can publish the post.
-		await page.type( '.editor-post-title__input', 'Hello World' );
+		await canvas().type( '.editor-post-title__input', 'Hello World' );
 
 		// Publish the post.
 		await publishPost();
@@ -196,7 +202,7 @@ describe( 'Taxonomies', () => {
 			return;
 		}
 
-		// At the start there are no tag tokens
+		// At the start there are no tag tokens.
 		expect( await page.$$( TAG_TOKEN_SELECTOR ) ).toHaveLength( 0 );
 
 		const tagsPanel = await findSidebarPanelWithTitle( 'Tags' );
@@ -207,7 +213,7 @@ describe( 'Taxonomies', () => {
 		// Click the tag input field.
 		await tagInput.click();
 
-		const tagName = 'tag-' + random( 1, Number.MAX_SAFE_INTEGER );
+		const tagName = 'tag-' + generateRandomNumber();
 
 		// Type the category name in the field.
 		await tagInput.type( tagName );
@@ -225,7 +231,7 @@ describe( 'Taxonomies', () => {
 		expect( tags[ 0 ] ).toEqual( tagName );
 
 		// Type something in the title so we can publish the post.
-		await page.type( '.editor-post-title__input', 'Hello World' );
+		await canvas().type( '.editor-post-title__input', 'Hello World' );
 
 		// Publish the post.
 		await publishPost();

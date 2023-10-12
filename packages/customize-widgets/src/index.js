@@ -1,7 +1,7 @@
 /**
  * WordPress dependencies
  */
-import { render } from '@wordpress/element';
+import { createRoot } from '@wordpress/element';
 import {
 	registerCoreBlocks,
 	__experimentalGetCoreBlocks,
@@ -12,9 +12,12 @@ import {
 	registerLegacyWidgetVariations,
 	registerWidgetGroupBlock,
 } from '@wordpress/widgets';
-import { setFreeformContentHandlerName } from '@wordpress/blocks';
+import {
+	setFreeformContentHandlerName,
+	store as blocksStore,
+} from '@wordpress/blocks';
 import { dispatch } from '@wordpress/data';
-import { store as interfaceStore } from '@wordpress/interface';
+import { store as preferencesStore } from '@wordpress/preferences';
 
 /**
  * Internal dependencies
@@ -26,7 +29,12 @@ import './filters';
 
 const { wp } = window;
 
-const DISABLED_BLOCKS = [ 'core/more', 'core/block', 'core/freeform' ];
+const DISABLED_BLOCKS = [
+	'core/more',
+	'core/block',
+	'core/freeform',
+	'core/template-part',
+];
 const ENABLE_EXPERIMENTAL_FSE_BLOCKS = false;
 
 /**
@@ -36,22 +44,24 @@ const ENABLE_EXPERIMENTAL_FSE_BLOCKS = false;
  * @param {Object} blockEditorSettings Block editor settings.
  */
 export function initialize( editorName, blockEditorSettings ) {
-	dispatch( interfaceStore ).setFeatureDefaults( 'core/customize-widgets', {
+	dispatch( preferencesStore ).setDefaults( 'core/customize-widgets', {
 		fixedToolbar: false,
 		welcomeGuide: true,
 	} );
 
+	dispatch( blocksStore ).reapplyBlockTypeFilters();
 	const coreBlocks = __experimentalGetCoreBlocks().filter( ( block ) => {
 		return ! (
 			DISABLED_BLOCKS.includes( block.name ) ||
 			block.name.startsWith( 'core/post' ) ||
 			block.name.startsWith( 'core/query' ) ||
-			block.name.startsWith( 'core/site' )
+			block.name.startsWith( 'core/site' ) ||
+			block.name.startsWith( 'core/navigation' )
 		);
 	} );
 	registerCoreBlocks( coreBlocks );
 	registerLegacyWidgetBlock();
-	if ( process.env.GUTENBERG_PHASE === 2 ) {
+	if ( process.env.IS_GUTENBERG_PLUGIN ) {
 		__experimentalRegisterExperimentalCoreBlocks( {
 			enableFSEBlocks: ENABLE_EXPERIMENTAL_FSE_BLOCKS,
 		} );
@@ -81,13 +91,13 @@ export function initialize( editorName, blockEditorSettings ) {
 			}
 		} );
 
-		render(
+		createRoot( container ).render(
 			<CustomizeWidgets
 				api={ wp.customize }
 				sidebarControls={ sidebarControls }
 				blockEditorSettings={ blockEditorSettings }
-			/>,
-			container
+			/>
 		);
 	} );
 }
+export { store } from './store';

@@ -1,42 +1,30 @@
-.edit-site-editor__toggle-save-panel {
-	z-index: z-index(".edit-site-editor__toggle-save-panel");
-	position: fixed !important; // Need to override the default relative positioning
-	top: -9999em;
-	bottom: auto;
-	left: auto;
-	right: 0;
-	width: $sidebar-width;
-	background-color: $white;
-	border: 1px dotted $gray-300;
-	height: auto !important; // Need to override the default sidebar positioning
-	padding: $grid-unit-30;
-	display: flex;
-	justify-content: center;
+.edit-site-editor__interface-skeleton {
+	opacity: 1;
+	transition: opacity 0.1s ease-out;
+	@include reduce-motion("transition");
 
-	.interface-interface-skeleton__actions:focus &,
-	.interface-interface-skeleton__actions:focus-within & {
-		top: auto;
-		bottom: 0;
+	&.is-loading {
+		opacity: 0;
+	}
+
+	.interface-interface-skeleton__header {
+		border: 0;
 	}
 }
 
-.edit-site-visual-editor {
-	position: relative;
-	height: 100%;
+.edit-site-editor__toggle-save-panel {
+	box-sizing: border-box;
+	width: $sidebar-width;
+	background-color: $white;
+	border: 1px dotted $gray-300;
+	padding: $grid-unit-30;
 	display: flex;
-	flex-flow: column;
-
-	iframe {
-		display: block;
-		width: 100%;
-		height: 100%;
-		background-color: $white;
-	}
+	justify-content: center;
 }
 
 // Adjust the position of the notices
 .edit-site .components-editor-notices__snackbar {
-	position: fixed;
+	position: absolute;
 	right: 0;
 	bottom: 40px;
 	padding-left: 16px;

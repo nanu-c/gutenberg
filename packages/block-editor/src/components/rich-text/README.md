@@ -43,7 +43,19 @@ _Optional._ Called when the block can be removed. `forward` is true when the sel
 
 ### `allowedFormats: Array`
 
-_Optional._ By default, all registered formats are allowed. This setting can be used to fine-tune the allowed formats. Example: `[ 'core/bold', 'core/link' ]`.
+_Optional._ By default, all registered formats are allowed. This setting can be used to fine-tune the allowed formats. If you want to limit the formats allowed, you can specify using allowedFormats property in your code. If you want to allow only bold and italic settings, then you need to pass it in array. Example: `[ 'core/bold', 'core/link' ]`.
+
+{% ESNext %}
+
+```js
+<RichText
+	tagName="h2"
+	value={ attributes.content }
+	allowedFormats={ [ 'core/bold', 'core/italic' ] } // Allow the content to be made bold or italic, but do not allow othe formatting options
+	onChange={ ( content ) => setAttributes( { content } ) }
+	placeholder={ __( 'Heading...' ) }
+/>
+```
 
 ### `withoutInteractiveFormatting: Boolean`
 
@@ -82,7 +94,7 @@ wp.blocks.registerBlockType( /* ... */, {
 	},
 
 	edit: function( props ) {
-		return wp.element.createElement( wp.editor.RichText, {
+		return React.createElement( wp.editor.RichText, {
 			tagName: 'h2',
 			className: props.className,
 			value: props.attributes.content,
@@ -93,7 +105,7 @@ wp.blocks.registerBlockType( /* ... */, {
 	},
 
 	save: function( props ) {
-		return wp.element.createElement( wp.editor.RichText.Content, {
+		return React.createElement( wp.editor.RichText.Content, {
 			tagName: 'h2', value: props.attributes.content
 		} );
 	}
@@ -148,7 +160,7 @@ Slot to extend the format toolbar. Use it in the edit function of a `registerFor
 wp.richText.registerFormatType( /* ... */, {
 	/* ... */
 	edit: function( props ) {
-		return wp.element.createElement(
+		return React.createElement(
 			wp.editor.RichTextToolbarButton, {
 				icon: 'editor-code',
 				title: 'My formatting button',

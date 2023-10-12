@@ -24,11 +24,11 @@ function myguten_block_init() {
     wp_register_script(
         'myguten-script',
         plugins_url( 'block.js', __FILE__ ),
-        array( 'wp-blocks', 'wp-element', 'wp-i18n', 'wp-block-editor' )
+        array( 'wp-blocks', 'react', 'wp-i18n', 'wp-block-editor' )
     );
 
     register_block_type( 'myguten/simple', array(
-		'api_version' => 2,
+		'api_version' => 3,
         'editor_script' => 'myguten-script',
     ) );
 }
@@ -38,7 +38,7 @@ add_action( 'init', 'myguten_block_init' );
 In your code, you can include the i18n functions. The most common function is **\_\_** (a double underscore) which provides translation of a simple string. Here is a basic block example:
 
 {% codetabs %}
-{% ESNext %}
+{% JSX %}
 
 ```js
 import { __ } from '@wordpress/i18n';
@@ -46,7 +46,7 @@ import { registerBlockType } from '@wordpress/blocks';
 import { useBlockProps } from '@wordpress/block-editor';
 
 registerBlockType( 'myguten/simple', {
-	apiVersion: 2,
+	apiVersion: 3,
 	title: __( 'Simple Block', 'myguten' ),
 	category: 'widgets',
 
@@ -64,11 +64,11 @@ registerBlockType( 'myguten/simple', {
 } );
 ```
 
-{% ES5 %}
+{% Plain %}
 
 ```js
+const el = React.createElement;
 const { __ } = wp.i18n;
-const el = wp.element.createElement;
 const { registerBlockType } = wp.blocks;
 const { useBlockProps } = wp.blockEditor;
 

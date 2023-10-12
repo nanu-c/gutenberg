@@ -3,36 +3,41 @@
  */
 const path = require( 'path' );
 
-const stories = [
-	process.env.NODE_ENV !== 'test' && './stories/**/*.(js|mdx)',
-	'../packages/block-editor/src/**/stories/*.js',
-	'../packages/components/src/**/stories/*.js',
-	'../packages/icons/src/**/stories/*.js',
-].filter( Boolean );
+/**
+ * WordPress dependencies
+ */
+const postcssPlugins = require( '@wordpress/postcss-plugins-preset' );
 
-const customEnvVariables = {};
-
-const modulesDir = path.join( __dirname, '../node_modules' );
-
-// Workaround for Emotion 11
-// https://github.com/storybookjs/storybook/pull/13300#issuecomment-783268111
-const updateEmotionAliases = ( config ) => ( {
-	...config,
-	resolve: {
-		...config.resolve,
-		alias: {
-			...config.resolve.alias,
-			'@emotion/core': path.join( modulesDir, '@emotion/react' ),
-			'@emotion/styled': path.join( modulesDir, '@emotion/styled' ),
-			'@emotion/styled-base': path.join( modulesDir, '@emotion/styled' ),
-			'emotion-theming': path.join( modulesDir, '@emotion/react' ),
+const scssLoaders = ( { isLazy } ) => [
+	{
+		loader: 'style-loader',
+		options: { injectType: isLazy ? 'lazyStyleTag' : 'styleTag' },
+	},
+	'css-loader',
+	{
+		loader: 'postcss-loader',
+		options: {
+			postcssOptions: {
+				ident: 'postcss',
+				plugins: postcssPlugins,
+			},
 		},
 	},
-} );
+	'sass-loader',
+];
+
+const stories = [
+	process.env.NODE_ENV !== 'test' && './stories/**/*.story.@(js|tsx)',
+	process.env.NODE_ENV !== 'test' && './stories/**/*.mdx',
+	'../packages/block-editor/src/**/stories/*.story.@(js|tsx|mdx)',
+	'../packages/components/src/**/stories/*.story.@(js|tsx|mdx)',
+	'../packages/icons/src/**/stories/*.story.@(js|tsx|mdx)',
+	'../packages/edit-site/src/**/stories/*.story.@(js|tsx|mdx)',
+].filter( Boolean );
 
 module.exports = {
 	core: {
-		builder: 'webpack5',
+		disableTelemetry: true,
 	},
 	stories,
 	addons: [
@@ -40,26 +45,54 @@ module.exports = {
 			name: '@storybook/addon-docs',
 			options: { configureJSX: true },
 		},
-		'@storybook/addon-knobs',
-		'@storybook/addon-storysource',
+		'@storybook/addon-controls',
 		'@storybook/addon-viewport',
 		'@storybook/addon-a11y',
+		'@storybook/addon-toolbars',
+		'@storybook/addon-actions',
+		'storybook-source-link',
 	],
-	managerWebpack: updateEmotionAliases,
-	// Workaround:
-	// https://github.com/storybookjs/storybook/issues/12270
+	framework: {
+		name: '@storybook/react-webpack5',
+		options: {},
+	},
+	features: {
+		babelModeV7: true,
+		emotionAlias: false,
+		storyStoreV7: true,
+	},
+	docs: {
+		autodocs: true,
+	},
 	webpackFinal: async ( config ) => {
-		// Find the DefinePlugin
-		const plugin = config.plugins.find( ( p ) => {
-			return p.definitions && p.definitions[ 'process.env' ];
-		} );
-		// Add custom env variables
-		Object.keys( customEnvVariables ).forEach( ( key ) => {
-			plugin.definitions[ 'process.env' ][ key ] = JSON.stringify(
-				customEnvVariables[ key ]
-			);
-		} );
-
-		return updateEmotionAliases( config );
+		return {
+			...config,
+			module: {
+				...config.module,
+				rules: [
+					...config.module.rules,
+					{
+						// Adds a `sourceLink` parameter to the story metadata, based on the file path
+						test: /\/stories\/.+\.story\.(j|t)sx?$/,
+						loader: path.resolve(
+							__dirname,
+							'./webpack/source-link-loader.js'
+						),
+						enforce: 'post',
+					},
+					{
+						test: /\.scss$/,
+						exclude: /\.lazy\.scss$/,
+						use: scssLoaders( { isLazy: false } ),
+						include: path.resolve( __dirname ),
+					},
+					{
+						test: /\.lazy\.scss$/,
+						use: scssLoaders( { isLazy: true } ),
+						include: path.resolve( __dirname ),
+					},
+				],
+			},
+		};
 	},
 };

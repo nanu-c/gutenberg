@@ -69,10 +69,10 @@ describe( 'Using Plugins API', () => {
 
 	describe( 'Sidebar', () => {
 		const SIDEBAR_PINNED_ITEM_BUTTON =
-			'.interface-pinned-items button[aria-label="Plugin sidebar title"]';
+			'.interface-pinned-items button[aria-label="Plugin title"]';
 		const SIDEBAR_PANEL_SELECTOR = '.sidebar-title-plugin-panel';
 		it( 'Should open plugins sidebar using More Menu item and render content', async () => {
-			await clickOnMoreMenuItem( 'Plugin sidebar more menu title' );
+			await clickOnMoreMenuItem( 'Plugin more menu title' );
 
 			const pluginSidebarContent = await page.$eval(
 				'.edit-post-sidebar',
@@ -105,7 +105,7 @@ describe( 'Using Plugins API', () => {
 			await page.reload();
 			await page.waitForSelector( '.edit-post-layout' );
 			expect( await page.$( SIDEBAR_PINNED_ITEM_BUTTON ) ).toBeNull();
-			await clickOnMoreMenuItem( 'Plugin sidebar more menu title' );
+			await clickOnMoreMenuItem( 'Plugin more menu title' );
 			await page.click( 'button[aria-label="Pin to toolbar"]' );
 			expect( await page.$( SIDEBAR_PINNED_ITEM_BUTTON ) ).not.toBeNull();
 			await page.reload();
@@ -114,12 +114,12 @@ describe( 'Using Plugins API', () => {
 		} );
 
 		it( 'Should close plugins sidebar using More Menu item', async () => {
-			await clickOnMoreMenuItem( 'Plugin sidebar more menu title' );
+			await clickOnMoreMenuItem( 'Plugin more menu title' );
 
 			const pluginSidebarOpened = await page.$( '.edit-post-sidebar' );
 			expect( pluginSidebarOpened ).not.toBeNull();
 
-			await clickOnMoreMenuItem( 'Plugin sidebar more menu title' );
+			await clickOnMoreMenuItem( 'Plugin more menu title' );
 
 			const pluginSidebarClosed = await page.$( '.edit-post-sidebar' );
 			expect( pluginSidebarClosed ).toBeNull();
@@ -135,7 +135,7 @@ describe( 'Using Plugins API', () => {
 			} );
 
 			it( 'Should open plugins sidebar using More Menu item and render content', async () => {
-				await clickOnMoreMenuItem( 'Plugin sidebar more menu title' );
+				await clickOnMoreMenuItem( 'Plugin more menu title' );
 
 				const pluginSidebarContent = await page.$eval(
 					'.edit-post-sidebar',
@@ -154,6 +154,36 @@ describe( 'Using Plugins API', () => {
 				( el ) => el.innerText
 			);
 			expect( pluginDocumentSettingsText ).toMatchSnapshot();
+		} );
+	} );
+
+	describe( 'Error Boundary', () => {
+		beforeAll( async () => {
+			await activatePlugin(
+				'gutenberg-test-plugin-plugins-error-boundary'
+			);
+		} );
+
+		afterAll( async () => {
+			await deactivatePlugin(
+				'gutenberg-test-plugin-plugins-error-boundary'
+			);
+		} );
+
+		it( 'Should create notice using plugin error boundary callback', async () => {
+			const noticeContent = await page.waitForSelector(
+				'.is-error .components-notice__content'
+			);
+			expect(
+				await page.evaluate(
+					( _noticeContent ) => _noticeContent.firstChild.nodeValue,
+					noticeContent
+				)
+			).toEqual(
+				'The "my-error-plugin" plugin has encountered an error and cannot be rendered.'
+			);
+
+			expect( console ).toHaveErrored();
 		} );
 	} );
 } );

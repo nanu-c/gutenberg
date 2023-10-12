@@ -11,8 +11,9 @@ import { __, sprintf } from '@wordpress/i18n';
 import {
 	__unstableGetBlockProps as getBlockProps,
 	getBlockType,
+	store as blocksStore,
 } from '@wordpress/blocks';
-import { useMergeRefs } from '@wordpress/compose';
+import { useMergeRefs, useDisabled } from '@wordpress/compose';
 import { useSelect } from '@wordpress/data';
 import warning from '@wordpress/warning';
 
@@ -20,7 +21,7 @@ import warning from '@wordpress/warning';
  * Internal dependencies
  */
 import useMovingAnimation from '../../use-moving-animation';
-import { BlockListBlockContext } from '../block';
+import { BlockListBlockContext } from '../block-list-block-context';
 import { useFocusFirstElement } from './use-focus-first-element';
 import { useIsHovered } from './use-is-hovered';
 import { useBlockEditContext } from '../../block-edit/context';
@@ -31,11 +32,11 @@ import { useBlockMovingModeClassNames } from './use-block-moving-mode-class-name
 import { useFocusHandler } from './use-focus-handler';
 import { useEventHandlers } from './use-selected-block-event-handlers';
 import { useNavModeExit } from './use-nav-mode-exit';
-import { useScrollIntoView } from './use-scroll-into-view';
 import { useBlockRefProvider } from './use-block-refs';
-import { useMultiSelection } from './use-multi-selection';
 import { useIntersectionObserver } from './use-intersection-observer';
 import { store as blockEditorStore } from '../../../store';
+import useBlockOverlayActive from '../../block-content-overlay';
+import { unlock } from '../../../lock-unlock';
 
 /**
  * If the block count exceeds the threshold, we disable the reordering animation
@@ -52,6 +53,32 @@ const BLOCK_ANIMATION_THRESHOLD = 200;
  * also pass any other props through this hook, and they will be merged and
  * returned.
  *
+ * Use of this hook on the outermost element of a block is required if using API >= v2.
+ *
+ * @example
+ * ```js
+ * import { useBlockProps } from '@wordpress/block-editor';
+ *
+ * export default function Edit() {
+ *
+ *   const blockProps = useBlockProps(
+ *     className: 'my-custom-class',
+ *     style: {
+ *       color: '#222222',
+ *       backgroundColor: '#eeeeee'
+ *     }
+ *   )
+ *
+ *   return (
+ *	    <div { ...blockProps }>
+ *
+ *     </div>
+ *   )
+ * }
+ *
+ * ```
+ *
+ *
  * @param {Object}  props                    Optional. Props to pass to the element. Must contain
  *                                           the ref if one is defined.
  * @param {Object}  options                  Options for internal use only.
@@ -60,9 +87,12 @@ const BLOCK_ANIMATION_THRESHOLD = 200;
  * @return {Object} Props to pass to the element to mark as a block.
  */
 export function useBlockProps( props = {}, { __unstableIsHtml } = {} ) {
-	const { clientId, className, wrapperProps = {}, isAligned } = useContext(
-		BlockListBlockContext
-	);
+	const {
+		clientId,
+		className,
+		wrapperProps = {},
+		isAligned,
+	} = useContext( BlockListBlockContext );
 	const {
 		index,
 		mode,
@@ -72,10 +102,11 @@ export function useBlockProps( props = {}, { __unstableIsHtml } = {} ) {
 		isPartOfSelection,
 		adjustScrolling,
 		enableAnimation,
+		isSubtreeDisabled,
 	} = useSelect(
 		( select ) => {
 			const {
-				getBlockRootClientId,
+				getBlockAttributes,
 				getBlockIndex,
 				getBlockMode,
 				getBlockName,
@@ -85,31 +116,37 @@ export function useBlockProps( props = {}, { __unstableIsHtml } = {} ) {
 				isBlockMultiSelected,
 				isAncestorMultiSelected,
 				isFirstMultiSelectedBlock,
-			} = select( blockEditorStore );
+				isBlockSubtreeDisabled,
+			} = unlock( select( blockEditorStore ) );
+			const { getActiveBlockVariation } = select( blocksStore );
 			const isSelected = isBlockSelected( clientId );
 			const isPartOfMultiSelection =
 				isBlockMultiSelected( clientId ) ||
 				isAncestorMultiSelected( clientId );
 			const blockName = getBlockName( clientId );
-			const rootClientId = getBlockRootClientId( clientId );
 			const blockType = getBlockType( blockName );
+			const attributes = getBlockAttributes( clientId );
+			const match = getActiveBlockVariation( blockName, attributes );
 
 			return {
-				index: getBlockIndex( clientId, rootClientId ),
+				index: getBlockIndex( clientId ),
 				mode: getBlockMode( clientId ),
 				name: blockName,
 				blockApiVersion: blockType?.apiVersion || 1,
-				blockTitle: blockType?.title,
+				blockTitle: match?.title || blockType?.title,
 				isPartOfSelection: isSelected || isPartOfMultiSelection,
 				adjustScrolling:
 					isSelected || isFirstMultiSelectedBlock( clientId ),
 				enableAnimation:
 					! isTyping() &&
 					getGlobalBlockCount() <= BLOCK_ANIMATION_THRESHOLD,
+				isSubtreeDisabled: isBlockSubtreeDisabled( clientId ),
 			};
 		},
 		[ clientId ]
 	);
+
+	const hasOverlay = useBlockOverlayActive( clientId );
 
 	// translators: %s: Type of block (i.e. Text, Image etc)
 	const blockLabel = sprintf( __( 'Block: %s' ), blockTitle );
@@ -117,11 +154,8 @@ export function useBlockProps( props = {}, { __unstableIsHtml } = {} ) {
 	const mergedRefs = useMergeRefs( [
 		props.ref,
 		useFocusFirstElement( clientId ),
-		// Must happen after focus because we check for focus in the block.
-		useScrollIntoView( clientId ),
 		useBlockRefProvider( clientId ),
 		useFocusHandler( clientId ),
-		useMultiSelection( clientId ),
 		useEventHandlers( clientId ),
 		useNavModeExit( clientId ),
 		useIsHovered(),
@@ -132,6 +166,7 @@ export function useBlockProps( props = {}, { __unstableIsHtml } = {} ) {
 			enableAnimation,
 			triggerAnimationOnChange: index,
 		} ),
+		useDisabled( { isDisabled: ! hasOverlay } ),
 	] );
 
 	const blockEditContext = useBlockEditContext();
@@ -143,20 +178,22 @@ export function useBlockProps( props = {}, { __unstableIsHtml } = {} ) {
 	}
 
 	return {
+		tabIndex: 0,
 		...wrapperProps,
 		...props,
 		ref: mergedRefs,
 		id: `block-${ clientId }${ htmlSuffix }`,
-		tabIndex: 0,
 		role: 'document',
 		'aria-label': blockLabel,
 		'data-block': clientId,
 		'data-type': name,
 		'data-title': blockTitle,
+		inert: isSubtreeDisabled ? 'true' : undefined,
 		className: classnames(
 			// The wp-block className is important for editor styles.
 			classnames( 'block-editor-block-list__block', {
 				'wp-block': ! isAligned,
+				'has-block-overlay': hasOverlay,
 			} ),
 			className,
 			props.className,

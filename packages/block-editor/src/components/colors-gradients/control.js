@@ -2,34 +2,23 @@
  * External dependencies
  */
 import classnames from 'classnames';
-import { every, isEmpty } from 'lodash';
 
 /**
  * WordPress dependencies
  */
-import { useState } from '@wordpress/element';
+import { __ } from '@wordpress/i18n';
 import {
 	BaseControl,
-	Button,
-	ButtonGroup,
-	ColorIndicator,
+	__experimentalVStack as VStack,
+	TabPanel,
 	ColorPalette,
 	GradientPicker,
 } from '@wordpress/components';
-import { sprintf, __ } from '@wordpress/i18n';
 
 /**
  * Internal dependencies
  */
-import { getColorObjectByColorValue } from '../colors';
-import { __experimentalGetGradientObjectByGradientValue } from '../gradients';
 import useSetting from '../use-setting';
-
-// translators: first %s: the color name or value (e.g. red or #ff0000)
-const colorIndicatorAriaLabel = __( '(Color: %s)' );
-
-// translators: first %s: the gradient name or value (e.g. red to green or linear-gradient(135deg,rgba(6,147,227,1) 0%,rgb(155,81,224) 100%)
-const gradientIndicatorAriaLabel = __( '(Gradient: %s)' );
 
 const colorsAndGradientKeys = [
 	'colors',
@@ -38,50 +27,25 @@ const colorsAndGradientKeys = [
 	'disableCustomGradients',
 ];
 
-function VisualLabel( {
-	colors,
-	gradients,
-	label,
-	currentTab,
-	colorValue,
-	gradientValue,
-} ) {
-	let value, ariaLabel;
-	if ( currentTab === 'color' ) {
-		if ( colorValue ) {
-			value = colorValue;
-			const colorObject = getColorObjectByColorValue( colors, value );
-			const colorName = colorObject && colorObject.name;
-			ariaLabel = sprintf( colorIndicatorAriaLabel, colorName || value );
-		}
-	} else if ( currentTab === 'gradient' && gradientValue ) {
-		value = gradientValue;
-		const gradientObject = __experimentalGetGradientObjectByGradientValue(
-			gradients,
-			value
-		);
-		const gradientName = gradientObject && gradientObject.name;
-		ariaLabel = sprintf(
-			gradientIndicatorAriaLabel,
-			gradientName || value
-		);
-	}
+const TAB_COLOR = {
+	name: 'color',
+	title: __( 'Solid' ),
+	value: 'color',
+};
+const TAB_GRADIENT = {
+	name: 'gradient',
+	title: __( 'Gradient' ),
+	value: 'gradient',
+};
 
-	return (
-		<>
-			{ label }
-			{ !! value && (
-				<ColorIndicator colorValue={ value } aria-label={ ariaLabel } />
-			) }
-		</>
-	);
-}
+const TABS_SETTINGS = [ TAB_COLOR, TAB_GRADIENT ];
 
 function ColorGradientControlInner( {
 	colors,
 	gradients,
 	disableCustomColors,
 	disableCustomGradients,
+	__experimentalIsRenderedInSidebar,
 	className,
 	label,
 	onColorChange,
@@ -89,87 +53,107 @@ function ColorGradientControlInner( {
 	colorValue,
 	gradientValue,
 	clearable,
+	showTitle = true,
+	enableAlpha,
+	headingLevel,
 } ) {
 	const canChooseAColor =
-		onColorChange && ( ! isEmpty( colors ) || ! disableCustomColors );
+		onColorChange &&
+		( ( colors && colors.length > 0 ) || ! disableCustomColors );
 	const canChooseAGradient =
 		onGradientChange &&
-		( ! isEmpty( gradients ) || ! disableCustomGradients );
-	const [ currentTab, setCurrentTab ] = useState(
-		gradientValue ? 'gradient' : !! canChooseAColor && 'color'
-	);
+		( ( gradients && gradients.length > 0 ) || ! disableCustomGradients );
 
 	if ( ! canChooseAColor && ! canChooseAGradient ) {
 		return null;
 	}
+
+	const tabPanels = {
+		[ TAB_COLOR.value ]: (
+			<ColorPalette
+				value={ colorValue }
+				onChange={
+					canChooseAGradient
+						? ( newColor ) => {
+								onColorChange( newColor );
+								onGradientChange();
+						  }
+						: onColorChange
+				}
+				{ ...{ colors, disableCustomColors } }
+				__experimentalIsRenderedInSidebar={
+					__experimentalIsRenderedInSidebar
+				}
+				clearable={ clearable }
+				enableAlpha={ enableAlpha }
+				headingLevel={ headingLevel }
+			/>
+		),
+		[ TAB_GRADIENT.value ]: (
+			<GradientPicker
+				__nextHasNoMargin
+				value={ gradientValue }
+				onChange={
+					canChooseAColor
+						? ( newGradient ) => {
+								onGradientChange( newGradient );
+								onColorChange();
+						  }
+						: onGradientChange
+				}
+				{ ...{ gradients, disableCustomGradients } }
+				__experimentalIsRenderedInSidebar={
+					__experimentalIsRenderedInSidebar
+				}
+				clearable={ clearable }
+				headingLevel={ headingLevel }
+			/>
+		),
+	};
+
+	const renderPanelType = ( type ) => (
+		<div className="block-editor-color-gradient-control__panel">
+			{ tabPanels[ type ] }
+		</div>
+	);
+
 	return (
 		<BaseControl
+			__nextHasNoMarginBottom
 			className={ classnames(
 				'block-editor-color-gradient-control',
 				className
 			) }
 		>
-			<fieldset>
-				<legend>
-					<div className="block-editor-color-gradient-control__color-indicator">
-						<BaseControl.VisualLabel>
-							<VisualLabel
-								currentTab={ currentTab }
-								label={ label }
-								colorValue={ colorValue }
-								gradientValue={ gradientValue }
-							/>
-						</BaseControl.VisualLabel>
-					</div>
-				</legend>
-				{ canChooseAColor && canChooseAGradient && (
-					<ButtonGroup className="block-editor-color-gradient-control__button-tabs">
-						<Button
-							isSmall
-							isPressed={ currentTab === 'color' }
-							onClick={ () => setCurrentTab( 'color' ) }
+			<fieldset className="block-editor-color-gradient-control__fieldset">
+				<VStack spacing={ 1 }>
+					{ showTitle && (
+						<legend>
+							<div className="block-editor-color-gradient-control__color-indicator">
+								<BaseControl.VisualLabel>
+									{ label }
+								</BaseControl.VisualLabel>
+							</div>
+						</legend>
+					) }
+					{ canChooseAColor && canChooseAGradient && (
+						<TabPanel
+							className="block-editor-color-gradient-control__tabs"
+							tabs={ TABS_SETTINGS }
+							initialTabName={
+								gradientValue
+									? TAB_GRADIENT.value
+									: !! canChooseAColor && TAB_COLOR.value
+							}
 						>
-							{ __( 'Solid' ) }
-						</Button>
-						<Button
-							isSmall
-							isPressed={ currentTab === 'gradient' }
-							onClick={ () => setCurrentTab( 'gradient' ) }
-						>
-							{ __( 'Gradient' ) }
-						</Button>
-					</ButtonGroup>
-				) }
-				{ ( currentTab === 'color' || ! canChooseAGradient ) && (
-					<ColorPalette
-						value={ colorValue }
-						onChange={
-							canChooseAGradient
-								? ( newColor ) => {
-										onColorChange( newColor );
-										onGradientChange();
-								  }
-								: onColorChange
-						}
-						{ ...{ colors, disableCustomColors } }
-						clearable={ clearable }
-					/>
-				) }
-				{ ( currentTab === 'gradient' || ! canChooseAColor ) && (
-					<GradientPicker
-						value={ gradientValue }
-						onChange={
-							canChooseAColor
-								? ( newGradient ) => {
-										onGradientChange( newGradient );
-										onColorChange();
-								  }
-								: onGradientChange
-						}
-						{ ...{ gradients, disableCustomGradients } }
-						clearable={ clearable }
-					/>
-				) }
+							{ ( tab ) => renderPanelType( tab.value ) }
+						</TabPanel>
+					) }
+					{ ! canChooseAGradient &&
+						renderPanelType( TAB_COLOR.value ) }
+					{ ! canChooseAColor &&
+						renderPanelType( TAB_GRADIENT.value ) }
+				</VStack>
 			</fieldset>
 		</BaseControl>
 	);
@@ -193,7 +177,7 @@ function ColorGradientControlSelect( props ) {
 
 function ColorGradientControl( props ) {
 	if (
-		every( colorsAndGradientKeys, ( key ) => props.hasOwnProperty( key ) )
+		colorsAndGradientKeys.every( ( key ) => props.hasOwnProperty( key ) )
 	) {
 		return <ColorGradientControlInner { ...props } />;
 	}

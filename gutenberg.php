@@ -2,10 +2,10 @@
 /**
  * Plugin Name: Gutenberg
  * Plugin URI: https://github.com/WordPress/gutenberg
- * Description: Printing since 1440. This is the development plugin for the new block editor in core.
- * Requires at least: 5.7
- * Requires PHP: 5.6
- * Version: 11.6.0-rc.1
+ * Description: Printing since 1440. This is the development plugin for the block editor, site editor, and other future WordPress core functionality.
+ * Requires at least: 6.2
+ * Requires PHP: 7.0
+ * Version: 16.8.1
  * Author: Gutenberg Team
  * Text Domain: gutenberg
  *
@@ -52,13 +52,13 @@ function gutenberg_wordpress_version_too_old_notice() {
 	if ( current_user_can( 'update_plugins' ) ) {
 		printf(
 			/* translators: %s: Minimum required version */
-			__( 'The Gutenberg plugin cannot be used. It requires WordPress %s or later to function properly. Please upgrade WordPress.', 'gutenberg' ),
+			__( 'Gutenberg requires WordPress %s or later to function properly. Please upgrade WordPress.', 'gutenberg' ),
 			esc_html( GUTENBERG_MIN_WP_VERSION )
 		);
 	} else {
 		printf(
 			/* translators: %s: Minimum required version */
-			__( 'The Gutenberg plugin cannot be used. It requires WordPress %s or later to function properly. Please ask an administrator to upgrade WordPress.', 'gutenberg' ),
+			__( 'Gutenberg requires WordPress %s or later to function properly. Please ask an administrator to upgrade WordPress.', 'gutenberg' ),
 			esc_html( GUTENBERG_MIN_WP_VERSION )
 		);
 	}
@@ -216,6 +216,19 @@ function gutenberg_pre_init() {
 		return;
 	}
 
-	// Load the plugin.
+	// Get unmodified $wp_version.
+	include ABSPATH . WPINC . '/version.php';
+
+	// Strip '-src' from the version string. Messes up version_compare().
+	$version = str_replace( '-src', '', $wp_version );
+
+	// Compare against major release versions (X.Y) rather than minor (X.Y.Z)
+	// unless a minor release is the actual minimum requirement. WordPress reports
+	// X.Y for its major releases.
+	if ( version_compare( $version, '5.9', '<' ) ) {
+		add_action( 'admin_notices', 'gutenberg_wordpress_version_notice' );
+		return;
+	}
+
 	require_once __DIR__ . '/lib/load.php';
 }

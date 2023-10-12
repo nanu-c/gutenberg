@@ -2,7 +2,60 @@
 
 What follows is a set of questions that have come up from the last few years of Gutenberg development. If you have any questions you’d like to have answered and included here, [just open up a GitHub issue](https://github.com/WordPress/gutenberg/issues) with your question. We’d love the chance to answer and provide clarity to questions we might not have thought to answer. For a look back historically, please see Matt's November 2018 post [WordPress 5.0: A Gutenberg FAQ](https://ma.tt/2018/11/a-gutenberg-faq/).
 
+
+## Table of Contents
+
+### The Gutenberg Project
+- [What is Gutenberg?](#what-is-gutenberg)
+- [What’s on the roadmap long term?](#whats-on-the-roadmap-long-term)
+- [When was Gutenberg started?](#when-was-gutenberg-started)
+- [When was Gutenberg merged into WordPress?](#when-was-gutenberg-merged-into-wordpress)
+- [WordPress is already the world's most popular publishing platform. Why change the editor at all?](#wordpress-is-already-the-worlds-most-popular-publishing-platform-why-change-the-editor-at-all)
+
+
+### The Editing Experience
+- [What are “blocks” and why are we using them?](#what-are-blocks-and-why-are-we-using-them)
+- [What is the writing experience like?](#what-is-the-writing-experience-like)
+- [Is Gutenberg built on top of TinyMCE?](#is-gutenberg-built-on-top-of-tinymce)
+- [Are there Keyboard Shortcuts for Gutenberg?](#are-there-keyboard-shortcuts-for-gutenberg)
+  * [Editor shortcuts](#editor-shortcuts)
+  * [Selection shortcuts](#selection-shortcuts)
+  * [Block shortcuts](#block-shortcuts)
+  * [Text formatting](#text-formatting)
+- [Does Gutenberg support columns?](#does-gutenberg-support-columns)
+- [Does Gutenberg support nested blocks?](#does-gutenberg-support-nested-blocks)
+- [Does drag and drop work for rearranging blocks?](#does-drag-and-drop-work-for-rearranging-blocks)
+
+### The Development Experience
+- [How do I make my own block?](#how-do-i-make-my-own-block)
+- [Does Gutenberg involve editing posts/pages in the front-end?](#does-gutenberg-involve-editing-posts-pages-in-the-front-end)
+- [Given Gutenberg is built in JavaScript, how do old meta boxes (PHP) work?](#given-gutenberg-is-built-in-javascript-how-do-old-meta-boxes-php-work)
+- [How can plugins extend the Gutenberg UI?](#how-can-plugins-extend-the-gutenberg-ui)
+- [Are Custom Post Types still supported?](#are-custom-post-types-still-supported)
+
+### Styles
+- [Can themes _style_ blocks?](#can-themes-_style_-blocks)
+- [How do block styles work in both the front-end and back-end?](#how-do-block-styles-work-in-both-the-front-end-and-back-end)
+- [What are block variations? Are they the same as block styles?](#what-are-block-variations-are-they-the-same-as-block-styles)
+- [How do editor styles work?](#how-do-editor-styles-work)
+
+### Compatibility
+- [What browsers does Gutenberg support?](#what-browsers-does-gutenberg-support)
+- [Should I be concerned that Gutenberg will make my plugin obsolete?](#should-i-be-concerned-that-gutenberg-will-make-my-plugin-obsolete)
+- [Is it possible to opt out of Gutenberg for my site?](#is-it-possible-to-opt-out-of-gutenberg-for-my-site)
+- [How do custom TinyMCE buttons work in Gutenberg?](#how-do-custom-tinymce-buttons-work-in-gutenberg)
+- [How do shortcodes work in Gutenberg?](#how-do-shortcodes-work-in-gutenberg)
+- [Should I move shortcodes to content blocks?](#should-i-move-shortcodes-to-content-blocks)
+
+### Miscellaneous
+- [Is Gutenberg made to be properly accessible?](#is-gutenberg-made-to-be-properly-accessible)
+- [How is data stored? I've seen HTML comments, what is their purpose?](#how-is-data-stored-ive-seen-html-comments-what-is-their-purpose)
+- [How can I parse the post content back out into blocks in PHP or JS?](#how-can-i-parse-the-post-content-back-out-into-blocks-in-php-or-js)
+
+----
+
 ## What is Gutenberg?
+
 
 “Gutenberg” is the name of the project to create a new editor experience for WordPress — contributors have been working on it since January 2017 and it’s one of the most significant changes to WordPress in years. It’s built on the idea of using “blocks” to write and design posts and pages. This will serve as the foundation for future improvements to WordPress, including blocks as a way not just to design posts and pages, but also entire sites. The overall goal is to simplify the first-time user experience of WordPress — for those who are writing, editing, publishing, and designing web pages. The editing experience is intended to give users a better visual representation of what their post or page will look like when they hit publish. Originally, this was the kickoff goal:
 
@@ -33,6 +86,10 @@ The editor focus started in early 2017 with the first three months spent designi
 
 Gutenberg was first merged into [WordPress 5.0](https://wordpress.org/news/2018/12/bebo/) in December 2018. See [the versions in WordPress page](https://developer.wordpress.org/block-editor/principles/versions-in-wordpress/) for a complete list of Gutenberg plugin versions merged into WordPress core releases.
 
+## WordPress is already the world's most popular publishing platform. Why change the editor at all?
+
+The Editor is where most of the action happens in WordPress’s daily use, and it was a place where we could polish and perfect the block experience in a contained environment. Further, as an open-source project, we believe that it is critical for WordPress to continue to innovate and keep working to make the core experience intuitive and enjoyable for all users. As a community project, Gutenberg has the potential to do just that, and we’re excited to pursue this goal together. If you’d like to test, contribute, or offer feedback, we welcome you to [share what you find on GitHub](https://github.com/WordPress/gutenberg/issues).
+
 ## What are “blocks” and why are we using them?
 
 The classic WordPress editor is an open text window—it’s always been a wonderful blank canvas for writing, but when it comes to building posts and pages with images, multimedia, embedded content from social media, polls, and other elements, it required a mix of different approaches that were not always intuitive:
@@ -49,6 +106,10 @@ As we thought about these uses and how to make them obvious and consistent, we b
 ## What is the writing experience like?
 
 Our goal with Gutenberg is not just to create a seamless post- and page-building experience. We also want to ensure that it provides a seamless writing experience. To test this out yourself, [head to this demo and give it a try](https://wordpress.org/gutenberg/)!
+
+## Is Gutenberg built on top of TinyMCE?
+
+No. [TinyMCE](https://www.tinymce.com/) is only used for the "Classic" block.
 
 ## Are there Keyboard Shortcuts for Gutenberg?
 
@@ -90,7 +151,7 @@ This is the canonical list of keyboard shortcuts:
 			<td><kbd>⇧</kbd><kbd>⌘</kbd><kbd>Z</kbd></td>
 		</tr>
 		<tr>
-			<td>Show or hide the settings sidebar.</td>
+			<td>Show or hide the Settings sidebar.</td>
 			<td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>,</kbd></td>
 			<td><kbd>⇧</kbd><kbd>⌘</kbd><kbd>,</kbd></td>
 		</tr>
@@ -131,7 +192,7 @@ This is the canonical list of keyboard shortcuts:
 		</tr>
 		<tr>
 			<td>Toggle fullscreen mode.</td>
-			<td><kbd>CMD</kbd>+<kbd>Option</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd></td>
+			<td><kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd></td>
 			<td><kbd>⇧</kbd><kbd>⌥</kbd><kbd>⌘</kbd><kbd>F</kbd></td>
 		</tr>
 	</tbody>
@@ -157,6 +218,11 @@ This is the canonical list of keyboard shortcuts:
 			<td>Clear selection.</td>
 			<td><kbd>Esc</kbd></td>
 			<td><kbd>Esc</kbd></td>
+		</tr>
+		<tr>
+			<td>Select text across multiple blocks.</td>
+			<td><kbd>Shift</kbd>+<kbd>Arrow (⇦, ⇧, ⇨, ⇩)</kbd></td>
+			<td><kbd>Shift</kbd>+<kbd>Arrow (⇦, ⇧, ⇨, ⇩)</kbd></td>
 		</tr>
 	</tbody>
 </table>
@@ -209,7 +275,7 @@ This is the canonical list of keyboard shortcuts:
 		</tr>
 		<tr>
 			<td>Remove multiple selected blocks.</td>
-			<td></td>
+			<td><kbd>del</kbd><kbd>backspace</kbd></td>
 			<td><kbd>del</kbd><kbd>backspace</kbd></td>
 		</tr>
 	</tbody>
@@ -268,36 +334,6 @@ Here is a brief animation illustrating how to find and use the keyboard shortcut
 
 ![GIF showing how to access keyboard shortcuts](https://make.wordpress.org/core/files/2020/07/keyboard-shortcuts.gif)
 
-## Is Gutenberg built on top of TinyMCE?
-
-No. [TinyMCE](https://www.tinymce.com/) is only used for the "Classic" block.
-
-## What browsers does Gutenberg support?
-
-Gutenberg works in modern browsers, and Internet Explorer 11.
-
-Our [list of supported browsers can be found in the Make WordPress handbook](https://make.wordpress.org/core/handbook/best-practices/browser-support/). By “modern browsers” we generally mean the _current and past two versions_ of each major browser.
-
-## How do I make my own block?
-
-The best place to start is the [Create a Block Tutorial](https://developer.wordpress.org/block-editor/tutorials/create-block/).
-
-## Does Gutenberg involve editing posts/pages in the front-end?
-
-No, we are designing Gutenberg primarily as a replacement for the post and page editing screens. That said, front-end editing is often confused with an editor that looks exactly like the front end. And that is something that Gutenberg will allow as themes customize individual blocks and provide those styles to the editor. Since content is designed to be distributed across so many different experiences—from desktop and mobile to full-text feeds and syndicated article platforms—we believe it's not ideal to create or design posts from just one front-end experience.
-
-## Given Gutenberg is built in JavaScript, how do old meta boxes (PHP) work?
-
-See the [Meta Box Tutorial](https://developer.wordpress.org/block-editor/tutorials/metabox/) for more information on using Meta boxes with the new block editor.
-
-## How can plugins extend the Gutenberg UI?
-
-The main extension point we want to emphasize is creating new blocks. Blocks are added to the block editor using plugins, see the [Create a Block Tutorial](https://developer.wordpress.org/block-editor/tutorials/create-block/) to get started.
-
-## Are Custom Post Types still supported?
-
-Indeed. There are multiple ways in which custom post types can leverage Gutenberg. The plan is to allow them to specify the blocks they support, as well as defining a default block for the post type. It's not currently the case, but if a post type disables the content field, the “advanced” section at the bottom would fill the page.
-
 ## Does Gutenberg support columns?
 
 Yes, a columns block is available in Gutenberg.
@@ -310,6 +346,27 @@ Yes, it is supported. You can have multiple levels of nesting – blocks within 
 
 Yes, you can drag and drop blocks to rearrange their order.
 
+
+## How do I make my own block?
+
+The best place to start is the [Create a Block Tutorial](https://developer.wordpress.org/block-editor/getting-started/create-block/).
+
+## Does Gutenberg involve editing posts/pages in the front-end?
+
+No, we are designing Gutenberg primarily as a replacement for the post and page editing screens. That said, front-end editing is often confused with an editor that looks exactly like the front end. And that is something that Gutenberg will allow as themes customize individual blocks and provide those styles to the editor. Since content is designed to be distributed across so many different experiences—from desktop and mobile to full-text feeds and syndicated article platforms—we believe it's not ideal to create or design posts from just one front-end experience.
+
+## Given Gutenberg is built in JavaScript, how do old meta boxes (PHP) work?
+
+See the [Meta Box Tutorial](https://developer.wordpress.org/block-editor/how-to-guides/metabox/) for more information on using Meta boxes with the new block editor.
+
+## How can plugins extend the Gutenberg UI?
+
+The main extension point we want to emphasize is creating new blocks. Blocks are added to the block editor using plugins, see the [Create a Block Tutorial](https://developer.wordpress.org/block-editor/getting-stared/create-block/) to get started.
+
+## Are Custom Post Types still supported?
+
+Indeed. There are multiple ways in which custom post types can leverage Gutenberg. The plan is to allow them to specify the blocks they support, as well as defining a default block for the post type. It's not currently the case, but if a post type disables the content field, the “advanced” section at the bottom would fill the page.
+
 ## Can themes _style_ blocks?
 
 Yes. Blocks can provide their own styles, which themes can add to or override, or they can provide no styles at all and rely fully on what the theme provides.
@@ -320,7 +377,7 @@ Blocks are able to provide base structural CSS styles, and themes can add styles
 
 Other features, like the new _wide_ and _full-wide_ alignment options, are simply CSS classes applied to blocks that offer this alignment. We are looking at how a theme can opt in to this feature, for example using `add_theme_support`.
 
-This is currently a work in progress and we recommend reviewing the [block based theme documentation](/docs/how-to-guides/themes/block-theme-overview.md) to learn more.
+This is currently a work in progress and we recommend reviewing the [block based theme documentation](https://developer.wordpress.org/themes/block-themes/) to learn more.
 
 ## What are block variations? Are they the same as block styles?
 
@@ -340,6 +397,14 @@ add_action( 'enqueue_block_editor_assets', 'gutenbergtheme_editor_styles' );
 ```
 
 _See:_ [Editor Styles](/docs/how-to-guides/themes/theme-support.md#editor-styles)
+
+## What browsers does Gutenberg support?
+
+Gutenberg works in modern browsers.
+
+The [list of supported browsers can be found in the Make WordPress handbook](https://make.wordpress.org/core/handbook/best-practices/browser-support/). The term “modern browsers” generally refers to the _current and previous two versions_ of each major browser.
+
+Since WordPress 5.8, Gutenberg no longer supports any version of Internet Explorer.
 
 ## Should I be concerned that Gutenberg will make my plugin obsolete?
 
@@ -405,6 +470,4 @@ In PHP:
 $blocks = parse_blocks( $post_content );
 ```
 
-## WordPress is already the world's most popular publishing platform. Why change the editor at all?
 
-The Editor is where most of the action happens in WordPress’s daily use, and it was a place where we could polish and perfect the block experience in a contained environment. Further, as an open-source project, we believe that it is critical for WordPress to continue to innovate and keep working to make the core experience intuitive and enjoyable for all users. As a community project, Gutenberg has the potential to do just that, and we’re excited to pursue this goal together. If you’d like to test, contribute, or offer feedback, we welcome you to [share what you find on GitHub](https://github.com/WordPress/gutenberg/issues).

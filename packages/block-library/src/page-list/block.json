@@ -1,5 +1,6 @@
 {
-	"apiVersion": 2,
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
 	"name": "core/page-list",
 	"title": "Page List",
 	"category": "widgets",
@@ -7,38 +8,13 @@
 	"keywords": [ "menu", "navigation" ],
 	"textdomain": "default",
 	"attributes": {
-		"textColor": {
-			"type": "string"
+		"parentPageID": {
+			"type": "integer",
+			"default": 0
 		},
-		"customTextColor": {
-			"type": "string"
-		},
-		"backgroundColor": {
-			"type": "string"
-		},
-		"customBackgroundColor": {
-			"type": "string"
-		},
-		"overlayBackgroundColor": {
-			"type": "string"
-		},
-		"customOverlayBackgroundColor": {
-			"type": "string"
-		},
-		"overlayTextColor": {
-			"type": "string"
-		},
-		"customOverlayTextColor": {
-			"type": "string"
-		},
-		"isNavigationChild": {
-			"type": "boolean"
-		},
-		"showSubmenuIcon": {
-			"type": "boolean"
-		},
-		"openSubmenusOnClick" : {
-			"type": "boolean"
+		"isNested": {
+			"type": "boolean",
+			"default": false
 		}
 	},
 	"usesContext": [
@@ -58,7 +34,20 @@
 	],
 	"supports": {
 		"reusable": false,
-		"html": false
+		"html": false,
+		"typography": {
+			"fontSize": true,
+			"lineHeight": true,
+			"__experimentalFontFamily": true,
+			"__experimentalFontWeight": true,
+			"__experimentalFontStyle": true,
+			"__experimentalTextTransform": true,
+			"__experimentalTextDecoration": true,
+			"__experimentalLetterSpacing": true,
+			"__experimentalDefaultControls": {
+				"fontSize": true
+			}
+		}
 	},
 	"editorStyle": "wp-block-page-list-editor",
 	"style": "wp-block-page-list"

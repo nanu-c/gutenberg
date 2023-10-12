@@ -15,6 +15,7 @@
 	height: $block-toolbar-height;
 	padding: 0 ( $grid-unit-15 + $border-width );
 	user-select: none;
+	width: max-content;
 
 	svg {
 		fill: currentColor;
@@ -43,10 +44,4 @@
 		font-family: $default-font;
 		font-size: $default-font-size;
 	}
-}
-
-// This hides the block being dragged.
-// The effect is that the block being dragged appears to be "lifted".
-.is-dragging {
-	display: none !important;
 }

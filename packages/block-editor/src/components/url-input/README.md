@@ -53,7 +53,7 @@ wp.blocks.registerBlockType( /* ... */, {
 	},
 
 	edit: function( props ) {
-		return wp.element.createElement( wp.blockEditor.URLInputButton, {
+		return React.createElement( wp.blockEditor.URLInputButton, {
 			className: props.className,
 			url: props.attributes.url,
 			onChange: function( url, post ) {
@@ -63,7 +63,7 @@ wp.blocks.registerBlockType( /* ... */, {
 	},
 
 	save: function( props ) {
-		return wp.element.createElement( 'a', {
+		return React.createElement( 'a', {
 			href: props.attributes.url,
 		}, props.attributes.text );
 	}
@@ -139,6 +139,12 @@ _Required._ Called when the value changes. The second parameter is `null` unless
 }
 ```
 
+### `onKeydown`: `( event: KeyboardEvent ) => void`
+
+A callback invoked on the keydown event.
+
+-   Required: No
+
 ### `label: String`
 
 _Optional._ If this property is added, a label will be generated using label property as the content.
@@ -147,6 +153,11 @@ _Optional._ If this property is added, a label will be generated using label pro
 
 _Optional._ Adds and optional class to the parent `div` that wraps the URLInput field and popover
 
+### `placeholder: String`
+
+_Optional._ Placeholder text to show when the field is empty, similar to the
+[`input` and `textarea` attribute of the same name](https://developer.mozilla.org/en-US/docs/Learn/HTML/Forms/HTML5_updates#The_placeholder_attribute).
+
 ### `disableSuggestions: Boolean`
 
 _Optional._ Provides additional control over whether suggestions are disabled.
@@ -154,6 +165,10 @@ _Optional._ Provides additional control over whether suggestions are disabled.
 When hiding the URLInput using CSS (as is sometimes done for accessibility purposes), the suggestions can still be displayed. This is because they're rendered in a popover in a different part of the DOM, so any styles applied to the URLInput's container won't affect the popover.
 
 This prop allows the suggestions list to be programmatically not rendered by passing a boolean—it can be `true` to make sure suggestions aren't rendered, or `false`/`undefined` to fall back to the default behaviour of showing suggestions when matching autocompletion items are found.
+
+### `__nextHasNoMarginBottom: Boolean`
+
+Start opting into the new margin-free styles that will become the default in a future version, currently scheduled to be WordPress 6.4. (The prop can be safely removed once this happens.)
 
 ## Example
 
@@ -174,7 +189,7 @@ wp.blocks.registerBlockType( /* ... */, {
 	},
 
 	edit: function( props ) {
-		return wp.element.createElement( wp.blockEditor.URLInput, {
+		return React.createElement( wp.blockEditor.URLInput, {
 			className: props.className,
 			value: props.attributes.url,
 			onChange: function( url, post ) {
@@ -184,7 +199,7 @@ wp.blocks.registerBlockType( /* ... */, {
 	},
 
 	save: function( props ) {
-		return wp.element.createElement( 'a', {
+		return React.createElement( 'a', {
 			href: props.attributes.url,
 		}, props.attributes.text );
 	}
@@ -212,6 +227,7 @@ registerBlockType( /* ... */, {
 	edit( { className, attributes, setAttributes } ) {
 		return (
 			<URLInput
+				__nextHasNoMarginBottom
 				className={ className }
 				value={ attributes.url }
 				onChange={ ( url, post ) => setAttributes( { url, text: (post && post.title) || 'Click here' } ) }

@@ -1,97 +1,210 @@
 /**
- * External dependencies
+ * WordPress dependencies
  */
-import MicroModal from 'micromodal';
+import { store as wpStore } from '@wordpress/interactivity';
 
-// Responsive navigation toggle.
-function navigationToggleModal( modal ) {
-	const triggerButton = document.querySelector(
-		`button[data-micromodal-trigger="${ modal.id }"]`
-	);
-	const closeButton = modal.querySelector( 'button[data-micromodal-close]' );
-	// Use aria-hidden to determine the status of the modal, as this attribute is
-	// managed by micromodal.
-	const isHidden = 'true' === modal.getAttribute( 'aria-hidden' );
-	triggerButton.setAttribute( 'aria-expanded', ! isHidden );
-	closeButton.setAttribute( 'aria-expanded', ! isHidden );
-	modal.classList.toggle( 'has-modal-open', ! isHidden );
+const focusableSelectors = [
+	'a[href]',
+	'input:not([disabled]):not([type="hidden"]):not([aria-hidden])',
+	'select:not([disabled]):not([aria-hidden])',
+	'textarea:not([disabled]):not([aria-hidden])',
+	'button:not([disabled]):not([aria-hidden])',
+	'[contenteditable]',
+	'[tabindex]:not([tabindex^="-"])',
+];
 
-	// Add a class to indicate the modal is open.
-	const htmlElement = document.documentElement;
-	htmlElement.classList.toggle( 'has-modal-open' );
-}
-
-// Open on click functionality.
-function closeSubmenus( element ) {
-	element
-		.querySelectorAll( '[aria-expanded="true"]' )
-		.forEach( function ( toggle ) {
-			toggle.setAttribute( 'aria-expanded', 'false' );
-		} );
-}
-
-function toggleSubmenuOnClick( event ) {
-	const buttonToggle = event.target.closest( '[aria-expanded]' );
-	const isSubmenuOpen = buttonToggle.getAttribute( 'aria-expanded' );
-
-	if ( isSubmenuOpen === 'true' ) {
-		closeSubmenus( buttonToggle.closest( '.wp-block-navigation-item' ) );
-	} else {
-		// Close all sibling submenus.
-		const parentElement = buttonToggle.closest(
-			'.wp-block-navigation-item'
-		);
-		const navigationParent = buttonToggle.closest(
-			'.wp-block-navigation__submenu-container, .wp-block-navigation__container, .wp-block-page-list'
-		);
-		navigationParent
-			.querySelectorAll( '.wp-block-navigation-item' )
-			.forEach( function ( child ) {
-				if ( child !== parentElement ) {
-					closeSubmenus( child );
-				}
-			} );
-		// Open submenu.
-		buttonToggle.setAttribute( 'aria-expanded', 'true' );
+const openMenu = ( store, menuOpenedOn ) => {
+	const { context, ref, selectors } = store;
+	selectors.core.navigation.menuOpenedBy( store )[ menuOpenedOn ] = true;
+	context.core.navigation.previousFocus = ref;
+	if ( context.core.navigation.type === 'overlay' ) {
+		// Add a `has-modal-open` class to the <html> root.
+		document.documentElement.classList.add( 'has-modal-open' );
 	}
-}
+};
 
-const submenuButtons = document.querySelectorAll(
-	'.wp-block-navigation-submenu__toggle'
-);
-
-submenuButtons.forEach( function ( button ) {
-	button.addEventListener( 'click', toggleSubmenuOnClick );
-} );
-
-// Close on click outside.
-document.addEventListener( 'click', function ( event ) {
-	const navigationBlocks = document.querySelectorAll(
-		'.wp-block-navigation'
-	);
-	navigationBlocks.forEach( function ( block ) {
-		if ( ! block.contains( event.target ) ) {
-			closeSubmenus( block );
+const closeMenu = ( store, menuClosedOn ) => {
+	const { context, selectors } = store;
+	selectors.core.navigation.menuOpenedBy( store )[ menuClosedOn ] = false;
+	// Check if the menu is still open or not.
+	if ( ! selectors.core.navigation.isMenuOpen( store ) ) {
+		if (
+			context.core.navigation.modal?.contains(
+				window.document.activeElement
+			)
+		) {
+			context.core.navigation.previousFocus.focus();
 		}
-	} );
-} );
-// Close on focus outside.
-document.addEventListener( 'keyup', function ( event ) {
-	const submenuBlocks = document.querySelectorAll(
-		'.wp-block-navigation-item.has-child'
-	);
-	submenuBlocks.forEach( function ( block ) {
-		if ( ! block.contains( event.target ) ) {
-			closeSubmenus( block );
+		context.core.navigation.modal = null;
+		context.core.navigation.previousFocus = null;
+		if ( context.core.navigation.type === 'overlay' ) {
+			document.documentElement.classList.remove( 'has-modal-open' );
 		}
-	} );
-} );
+	}
+};
 
-// Necessary for some themes such as TT1 Blocks, where
-// scripts could be loaded before the body.
-window.onload = () =>
-	MicroModal.init( {
-		onShow: navigationToggleModal,
-		onClose: navigationToggleModal,
-		openClass: 'is-menu-open',
-	} );
+wpStore( {
+	effects: {
+		core: {
+			navigation: {
+				initMenu: ( store ) => {
+					const { context, selectors, ref } = store;
+					if ( selectors.core.navigation.isMenuOpen( store ) ) {
+						const focusableElements =
+							ref.querySelectorAll( focusableSelectors );
+						context.core.navigation.modal = ref;
+						context.core.navigation.firstFocusableElement =
+							focusableElements[ 0 ];
+						context.core.navigation.lastFocusableElement =
+							focusableElements[ focusableElements.length - 1 ];
+					}
+				},
+				focusFirstElement: ( store ) => {
+					const { selectors, ref } = store;
+					if ( selectors.core.navigation.isMenuOpen( store ) ) {
+						ref.querySelector(
+							'.wp-block-navigation-item > *:first-child'
+						).focus();
+					}
+				},
+			},
+		},
+	},
+	selectors: {
+		core: {
+			navigation: {
+				roleAttribute: ( store ) => {
+					const { context, selectors } = store;
+					return context.core.navigation.type === 'overlay' &&
+						selectors.core.navigation.isMenuOpen( store )
+						? 'dialog'
+						: null;
+				},
+				ariaModal: ( store ) => {
+					const { context, selectors } = store;
+					return context.core.navigation.type === 'overlay' &&
+						selectors.core.navigation.isMenuOpen( store )
+						? 'true'
+						: null;
+				},
+				ariaLabel: ( store ) => {
+					const { context, selectors } = store;
+					return context.core.navigation.type === 'overlay' &&
+						selectors.core.navigation.isMenuOpen( store )
+						? context.core.navigation.ariaLabel
+						: null;
+				},
+				isMenuOpen: ( { context } ) =>
+					// The menu is opened if either `click`, `hover` or `focus` is true.
+					Object.values(
+						context.core.navigation[
+							context.core.navigation.type === 'overlay'
+								? 'overlayOpenedBy'
+								: 'submenuOpenedBy'
+						]
+					).filter( Boolean ).length > 0,
+				menuOpenedBy: ( { context } ) =>
+					context.core.navigation[
+						context.core.navigation.type === 'overlay'
+							? 'overlayOpenedBy'
+							: 'submenuOpenedBy'
+					],
+			},
+		},
+	},
+	actions: {
+		core: {
+			navigation: {
+				openMenuOnHover( store ) {
+					const { navigation } = store.context.core;
+					if (
+						navigation.type === 'submenu' &&
+						// Only open on hover if the overlay is closed.
+						Object.values(
+							navigation.overlayOpenedBy || {}
+						).filter( Boolean ).length === 0
+					)
+						openMenu( store, 'hover' );
+				},
+				closeMenuOnHover( store ) {
+					closeMenu( store, 'hover' );
+				},
+				openMenuOnClick( store ) {
+					openMenu( store, 'click' );
+				},
+				closeMenuOnClick( store ) {
+					closeMenu( store, 'click' );
+					closeMenu( store, 'focus' );
+				},
+				openMenuOnFocus( store ) {
+					openMenu( store, 'focus' );
+				},
+				toggleMenuOnClick: ( store ) => {
+					const { selectors } = store;
+					const menuOpenedBy =
+						selectors.core.navigation.menuOpenedBy( store );
+					if ( menuOpenedBy.click || menuOpenedBy.focus ) {
+						closeMenu( store, 'click' );
+						closeMenu( store, 'focus' );
+					} else {
+						openMenu( store, 'click' );
+					}
+				},
+				handleMenuKeydown: ( store ) => {
+					const { context, selectors, event } = store;
+					if (
+						selectors.core.navigation.menuOpenedBy( store ).click
+					) {
+						// If Escape close the menu.
+						if ( event?.key === 'Escape' ) {
+							closeMenu( store, 'click' );
+							closeMenu( store, 'focus' );
+							return;
+						}
+
+						// Trap focus if it is an overlay (main menu).
+						if (
+							context.core.navigation.type === 'overlay' &&
+							event.key === 'Tab'
+						) {
+							// If shift + tab it change the direction.
+							if (
+								event.shiftKey &&
+								window.document.activeElement ===
+									context.core.navigation
+										.firstFocusableElement
+							) {
+								event.preventDefault();
+								context.core.navigation.lastFocusableElement.focus();
+							} else if (
+								! event.shiftKey &&
+								window.document.activeElement ===
+									context.core.navigation.lastFocusableElement
+							) {
+								event.preventDefault();
+								context.core.navigation.firstFocusableElement.focus();
+							}
+						}
+					}
+				},
+				handleMenuFocusout: ( store ) => {
+					const { context, event } = store;
+					// If focus is outside modal, and in the document, close menu
+					// event.target === The element losing focus
+					// event.relatedTarget === The element receiving focus (if any)
+					// When focusout is outsite the document,
+					// `window.document.activeElement` doesn't change.
+					if (
+						! context.core.navigation.modal?.contains(
+							event.relatedTarget
+						) &&
+						event.target !== window.document.activeElement
+					) {
+						closeMenu( store, 'click' );
+						closeMenu( store, 'focus' );
+					}
+				},
+			},
+		},
+	},
+} );

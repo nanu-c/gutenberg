@@ -7,69 +7,31 @@ import { store as coreDataStore } from '@wordpress/core-data';
  * Internal dependencies
  */
 import {
-	isFeatureActive,
 	getCanUserCreateMedia,
 	getSettings,
-	getHomeTemplateId,
 	getEditedPostType,
 	getEditedPostId,
-	getPage,
-	getNavigationPanelActiveMenu,
-	isNavigationOpened,
+	getReusableBlocks,
 	isInserterOpened,
 	isListViewOpened,
+	__unstableGetPreference,
+	isPage,
+	hasPageContentFocus,
 } from '../selectors';
 
 describe( 'selectors', () => {
 	const canUser = jest.fn( () => true );
+	const getEntityRecords = jest.fn( () => [] );
+	const get = jest.fn();
 	getCanUserCreateMedia.registry = {
 		select: jest.fn( () => ( { canUser } ) ),
 	};
-
-	describe( 'isFeatureActive', () => {
-		it( 'is tolerant to an undefined features preference', () => {
-			// See: https://github.com/WordPress/gutenberg/issues/14580
-			const state = {
-				preferences: {},
-			};
-
-			expect( isFeatureActive( state, 'chicken' ) ).toBe( false );
-		} );
-
-		it( 'should return true if feature is active', () => {
-			const state = {
-				preferences: {
-					features: {
-						chicken: true,
-					},
-				},
-			};
-
-			expect( isFeatureActive( state, 'chicken' ) ).toBe( true );
-		} );
-
-		it( 'should return false if feature is not active', () => {
-			const state = {
-				preferences: {
-					features: {
-						chicken: false,
-					},
-				},
-			};
-
-			expect( isFeatureActive( state, 'chicken' ) ).toBe( false );
-		} );
-
-		it( 'should return false if feature is not referred', () => {
-			const state = {
-				preferences: {
-					features: {},
-				},
-			};
-
-			expect( isFeatureActive( state, 'chicken' ) ).toBe( false );
-		} );
-	} );
+	getReusableBlocks.registry = {
+		select: jest.fn( () => ( { getEntityRecords } ) ),
+	};
+	__unstableGetPreference.registry = {
+		select: jest.fn( () => ( { get } ) ),
+	};
 
 	describe( 'getCanUserCreateMedia', () => {
 		it( "selects `canUser( 'create', 'media' )` from the core store", () => {
@@ -81,46 +43,74 @@ describe( 'selectors', () => {
 		} );
 	} );
 
+	describe( 'getReusableBlocks', () => {
+		it( "selects `getEntityRecords( 'postType', 'wp_block' )` from the core store", () => {
+			expect( getReusableBlocks() ).toEqual( [] );
+			expect( getReusableBlocks.registry.select ).toHaveBeenCalledWith(
+				coreDataStore
+			);
+			expect( getEntityRecords ).toHaveBeenCalledWith(
+				'postType',
+				'wp_block',
+				{
+					per_page: -1,
+				}
+			);
+		} );
+	} );
+
 	describe( 'getSettings', () => {
 		it( "returns the settings when the user can't create media", () => {
 			canUser.mockReturnValueOnce( false );
 			canUser.mockReturnValueOnce( false );
-			const state = { settings: {}, preferences: {} };
+			get.mockImplementation( ( scope, name ) => {
+				if ( name === 'focusMode' ) return false;
+				if ( name === 'fixedToolbar' ) return false;
+			} );
+			const state = {
+				settings: {},
+				preferences: {},
+				editedPost: { postType: 'wp_template' },
+			};
 			const setInserterOpened = () => {};
 			expect( getSettings( state, setInserterOpened ) ).toEqual( {
 				outlineMode: true,
 				focusMode: false,
 				hasFixedToolbar: false,
+				isDistractionFree: false,
+				keepCaretInsideBlock: false,
+				showIconLabels: false,
 				__experimentalSetIsInserterOpened: setInserterOpened,
+				__experimentalReusableBlocks: [],
+				__experimentalPreferPatternsOnRoot: true,
 			} );
 		} );
 
 		it( 'returns the extended settings when the user can create media', () => {
+			get.mockImplementation( ( scope, name ) => {
+				if ( name === 'focusMode' ) return true;
+				if ( name === 'fixedToolbar' ) return true;
+			} );
+
 			const state = {
 				settings: { key: 'value' },
-				preferences: {
-					features: {
-						focusMode: true,
-						fixedToolbar: true,
-					},
-				},
+				editedPost: { postType: 'wp_template_part' },
 			};
 			const setInserterOpened = () => {};
+
 			expect( getSettings( state, setInserterOpened ) ).toEqual( {
 				outlineMode: true,
 				key: 'value',
 				focusMode: true,
 				hasFixedToolbar: true,
+				isDistractionFree: false,
+				keepCaretInsideBlock: false,
+				showIconLabels: false,
 				__experimentalSetIsInserterOpened: setInserterOpened,
+				__experimentalReusableBlocks: [],
 				mediaUpload: expect.any( Function ),
+				__experimentalPreferPatternsOnRoot: false,
 			} );
-		} );
-	} );
-
-	describe( 'getHomeTemplateId', () => {
-		it( 'returns the home template ID', () => {
-			const state = { homeTemplateId: {} };
-			expect( getHomeTemplateId( state ) ).toBe( state.homeTemplateId );
 		} );
 	} );
 
@@ -133,36 +123,8 @@ describe( 'selectors', () => {
 
 	describe( 'getEditedPostType', () => {
 		it( 'returns the template type', () => {
-			const state = { editedPost: { type: 'wp_template' } };
+			const state = { editedPost: { postType: 'wp_template' } };
 			expect( getEditedPostType( state ) ).toBe( 'wp_template' );
-		} );
-	} );
-
-	describe( 'getPage', () => {
-		it( 'returns the page object', () => {
-			const page = {};
-			const state = { editedPost: { page } };
-			expect( getPage( state ) ).toBe( page );
-		} );
-	} );
-
-	describe( 'getNavigationPanelActiveMenu', () => {
-		it( 'returns the current navigation menu', () => {
-			const state = {
-				navigationPanel: { menu: 'test-menu', isOpen: false },
-			};
-			expect( getNavigationPanelActiveMenu( state ) ).toBe( 'test-menu' );
-		} );
-	} );
-
-	describe( 'isNavigationOpened', () => {
-		it( 'returns the navigation panel isOpened state', () => {
-			const state = {
-				navigationPanel: { menu: 'test-menu', isOpen: false },
-			};
-			expect( isNavigationOpened( state ) ).toBe( false );
-			state.navigationPanel.isOpen = true;
-			expect( isNavigationOpened( state ) ).toBe( true );
 		} );
 	} );
 
@@ -185,6 +147,61 @@ describe( 'selectors', () => {
 			expect( isListViewOpened( state ) ).toBe( true );
 			state.listViewPanel = false;
 			expect( isListViewOpened( state ) ).toBe( false );
+		} );
+	} );
+
+	describe( 'isPage', () => {
+		it( 'returns true if the edited post type is a page', () => {
+			const state = {
+				editedPost: {
+					postType: 'wp_template',
+					context: { postType: 'page', postId: 123 },
+				},
+			};
+			expect( isPage( state ) ).toBe( true );
+		} );
+
+		it( 'returns false if the edited post type is a template', () => {
+			const state = {
+				editedPost: {
+					postType: 'wp_template',
+				},
+			};
+			expect( isPage( state ) ).toBe( false );
+		} );
+	} );
+
+	describe( 'hasPageContentFocus', () => {
+		it( 'returns true if locked and the edited post type is a page', () => {
+			const state = {
+				editedPost: {
+					postType: 'wp_template',
+					context: { postType: 'page', postId: 123 },
+				},
+				hasPageContentFocus: true,
+			};
+			expect( hasPageContentFocus( state ) ).toBe( true );
+		} );
+
+		it( 'returns false if not locked and the edited post type is a page', () => {
+			const state = {
+				editedPost: {
+					postType: 'wp_template',
+					context: { postType: 'page', postId: 123 },
+				},
+				hasPageContentFocus: false,
+			};
+			expect( hasPageContentFocus( state ) ).toBe( false );
+		} );
+
+		it( 'returns false if locked and the edited post type is a template', () => {
+			const state = {
+				editedPost: {
+					postType: 'wp_template',
+				},
+				hasPageContentFocus: true,
+			};
+			expect( hasPageContentFocus( state ) ).toBe( false );
 		} );
 	} );
 } );

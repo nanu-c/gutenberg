@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { shallow } from 'enzyme';
+import { render, screen, within } from '@testing-library/react';
 
 /**
  * WordPress dependencies
@@ -12,31 +12,68 @@ import { useViewportMatch } from '@wordpress/compose';
 /**
  * Internal dependencies
  */
-import PreferencesModal from '../';
+import EditPostPreferencesModal from '../';
 
-// This allows us to tweak the returned value on each test
+// This allows us to tweak the returned value on each test.
 jest.mock( '@wordpress/data/src/components/use-select', () => jest.fn() );
 jest.mock( '@wordpress/compose/src/hooks/use-viewport-match', () => jest.fn() );
 
-describe( 'PreferencesModal', () => {
+describe( 'EditPostPreferencesModal', () => {
 	describe( 'should match snapshot when the modal is active', () => {
-		it( 'large viewports', () => {
-			useSelect.mockImplementation( () => ( { isModalActive: true } ) );
-			useViewportMatch.mockImplementation( () => true );
-			const wrapper = shallow( <PreferencesModal /> );
-			expect( wrapper ).toMatchSnapshot();
+		afterEach( () => {
+			useViewportMatch.mockClear();
 		} );
-		it( 'small viewports', () => {
-			useSelect.mockImplementation( () => ( { isModalActive: true } ) );
+		it( 'large viewports', async () => {
+			useSelect.mockImplementation( () => [ true, true, false ] );
+			useViewportMatch.mockImplementation( () => true );
+			render( <EditPostPreferencesModal /> );
+			const tabPanel = await screen.findByRole( 'tabpanel', {
+				name: 'General',
+			} );
+
+			expect(
+				within( tabPanel ).getByLabelText(
+					'Include pre-publish checklist'
+				)
+			).toBeInTheDocument();
+		} );
+		it( 'small viewports', async () => {
+			useSelect.mockImplementation( () => [ true, true, false ] );
 			useViewportMatch.mockImplementation( () => false );
-			const wrapper = shallow( <PreferencesModal /> );
-			expect( wrapper ).toMatchSnapshot();
+			render( <EditPostPreferencesModal /> );
+
+			// The tabpanel is not rendered in small viewports.
+			expect(
+				screen.queryByRole( 'tabpanel', {
+					name: 'General',
+				} )
+			).not.toBeInTheDocument();
+
+			const dialog = screen.getByRole( 'dialog', {
+				name: 'Preferences',
+			} );
+
+			// Checkbox toggle controls are not rendered in small viewports.
+			expect(
+				within( dialog ).queryByLabelText(
+					'Include pre-publish checklist'
+				)
+			).not.toBeInTheDocument();
+
+			// Individual preference nav buttons are rendered in small viewports.
+			expect(
+				within( dialog ).getByRole( 'button', {
+					name: 'General',
+				} )
+			).toBeInTheDocument();
 		} );
 	} );
 
 	it( 'should not render when the modal is not active', () => {
-		useSelect.mockImplementation( () => ( { isModalActive: false } ) );
-		const wrapper = shallow( <PreferencesModal /> );
-		expect( wrapper.isEmptyRender() ).toBe( true );
+		useSelect.mockImplementation( () => [ false, false, false ] );
+		render( <EditPostPreferencesModal /> );
+		expect(
+			screen.queryByRole( 'dialog', { name: 'Preferences' } )
+		).not.toBeInTheDocument();
 	} );
 } );

@@ -3,23 +3,22 @@
  */
 import { useRef } from '@wordpress/element';
 import { useRefEffect } from '@wordpress/compose';
-import { getFilesFromDataTransfer } from '@wordpress/dom';
-import { pasteHandler } from '@wordpress/blocks';
 import {
-	isEmpty,
-	insert,
-	create,
-	replace,
-	__UNSTABLE_LINE_SEPARATOR as LINE_SEPARATOR,
-} from '@wordpress/rich-text';
+	pasteHandler,
+	findTransform,
+	getBlockTransforms,
+} from '@wordpress/blocks';
+import { isEmpty, insert, create } from '@wordpress/rich-text';
 import { isURL } from '@wordpress/url';
 
 /**
  * Internal dependencies
  */
-import { filePasteHandler } from './file-paste-handler';
-import { addActiveFormats, isShortcode } from './utils';
+import { addActiveFormats } from './utils';
 import { splitValue } from './split-value';
+import { getPasteEventData } from '../../utils/pasting';
+
+/** @typedef {import('@wordpress/rich-text').RichTextValue} RichTextValue */
 
 export function usePasteHandler( props ) {
 	const propsRef = useRef( props );
@@ -35,42 +34,16 @@ export function usePasteHandler( props ) {
 				tagName,
 				onReplace,
 				onSplit,
-				onSplitMiddle,
 				__unstableEmbedURLOnPaste,
-				multilineTag,
 				preserveWhiteSpace,
 				pastePlainText,
 			} = propsRef.current;
 
 			if ( ! isSelected ) {
-				event.preventDefault();
 				return;
 			}
 
-			const { clipboardData } = event;
-
-			let plainText = '';
-			let html = '';
-
-			// IE11 only supports `Text` as an argument for `getData` and will
-			// otherwise throw an invalid argument error, so we try the standard
-			// arguments first, then fallback to `Text` if they fail.
-			try {
-				plainText = clipboardData.getData( 'text/plain' );
-				html = clipboardData.getData( 'text/html' );
-			} catch ( error1 ) {
-				try {
-					html = clipboardData.getData( 'Text' );
-				} catch ( error2 ) {
-					// Some browsers like UC Browser paste plain text by default and
-					// don't support clipboardData at all, so allow default
-					// behaviour.
-					return;
-				}
-			}
-
-			// Remove Windows-specific metadata appended within copied HTML text.
-			html = removeWindowsFragments( html );
+			const { plainText, html, files } = getPasteEventData( event );
 
 			event.preventDefault();
 
@@ -103,8 +76,8 @@ export function usePasteHandler( props ) {
 				return;
 			}
 
-			const files = [ ...getFilesFromDataTransfer( clipboardData ) ];
-			const isInternal = clipboardData.getData( 'rich-text' ) === 'true';
+			const isInternal =
+				event.clipboardData.getData( 'rich-text' ) === 'true';
 
 			// If the data comes from a rich text instance, we can directly use it
 			// without filtering the data. The filters are only meant for externally
@@ -112,9 +85,6 @@ export function usePasteHandler( props ) {
 			if ( isInternal ) {
 				const pastedValue = create( {
 					html,
-					multilineTag,
-					multilineWrapperTags:
-						multilineTag === 'li' ? [ 'ul', 'ol' ] : undefined,
 					preserveWhiteSpace,
 				} );
 				addActiveFormats( pastedValue, value.activeFormats );
@@ -127,30 +97,40 @@ export function usePasteHandler( props ) {
 				return;
 			}
 
-			// Only process file if no HTML is present.
-			// Note: a pasted file may have the URL as plain text.
-			if ( files && files.length && ! html ) {
-				const content = pasteHandler( {
-					HTML: filePasteHandler( files ),
-					mode: 'BLOCKS',
-					tagName,
-					preserveWhiteSpace,
-				} );
-
+			if ( files?.length ) {
 				// Allows us to ask for this information when we get a report.
 				// eslint-disable-next-line no-console
 				window.console.log( 'Received items:\n\n', files );
 
+				const fromTransforms = getBlockTransforms( 'from' );
+				const blocks = files
+					.reduce( ( accumulator, file ) => {
+						const transformation = findTransform(
+							fromTransforms,
+							( transform ) =>
+								transform.type === 'files' &&
+								transform.isMatch( [ file ] )
+						);
+						if ( transformation ) {
+							accumulator.push(
+								transformation.transform( [ file ] )
+							);
+						}
+						return accumulator;
+					}, [] )
+					.flat();
+				if ( ! blocks.length ) {
+					return;
+				}
+
 				if ( onReplace && isEmpty( value ) ) {
-					onReplace( content );
+					onReplace( blocks );
 				} else {
 					splitValue( {
 						value,
-						pastedBlocks: content,
+						pastedBlocks: blocks,
 						onReplace,
 						onSplit,
-						onSplitMiddle,
-						multilineTag,
 					} );
 				}
 
@@ -159,22 +139,14 @@ export function usePasteHandler( props ) {
 
 			let mode = onReplace && onSplit ? 'AUTO' : 'INLINE';
 
-			// Force the blocks mode when the user is pasting
-			// on a new line & the content resembles a shortcode.
-			// Otherwise it's going to be detected as inline
-			// and the shortcode won't be replaced.
-			if (
-				mode === 'AUTO' &&
-				isEmpty( value ) &&
-				isShortcode( plainText )
-			) {
-				mode = 'BLOCKS';
-			}
+			const trimmedPlainText = plainText.trim();
 
 			if (
 				__unstableEmbedURLOnPaste &&
 				isEmpty( value ) &&
-				isURL( plainText.trim() )
+				isURL( trimmedPlainText ) &&
+				// For the link pasting feature, allow only http(s) protocols.
+				/^https?:/.test( trimmedPlainText )
 			) {
 				mode = 'BLOCKS';
 			}
@@ -188,20 +160,8 @@ export function usePasteHandler( props ) {
 			} );
 
 			if ( typeof content === 'string' ) {
-				let valueToInsert = create( { html: content } );
-
+				const valueToInsert = create( { html: content } );
 				addActiveFormats( valueToInsert, value.activeFormats );
-
-				// If the content should be multiline, we should process text
-				// separated by a line break as separate lines.
-				if ( multilineTag ) {
-					valueToInsert = replace(
-						valueToInsert,
-						/\n+/g,
-						LINE_SEPARATOR
-					);
-				}
-
 				onChange( insert( value, valueToInsert ) );
 			} else if ( content.length > 0 ) {
 				if ( onReplace && isEmpty( value ) ) {
@@ -212,8 +172,6 @@ export function usePasteHandler( props ) {
 						pastedBlocks: content,
 						onReplace,
 						onSplit,
-						onSplitMiddle,
-						multilineTag,
 					} );
 				}
 			}
@@ -224,18 +182,4 @@ export function usePasteHandler( props ) {
 			element.removeEventListener( 'paste', _onPaste );
 		};
 	}, [] );
-}
-
-/**
- * Normalizes a given string of HTML to remove the Windows specific "Fragment" comments
- * and any preceeding and trailing whitespace.
- *
- * @param {string} html the html to be normalized
- * @return {string} the normalized html
- */
-function removeWindowsFragments( html ) {
-	const startReg = /.*<!--StartFragment-->/s;
-	const endReg = /<!--EndFragment-->.*/s;
-
-	return html.replace( startReg, '' ).replace( endReg, '' );
 }

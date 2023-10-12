@@ -4,7 +4,7 @@ MediaUpload is a React component used to render a button that opens the WordPres
 
 ## Setup
 
-This is a placeholder component necessary to make it possible to provide an integration with the core blocks that handle media files. By default it renders nothing but it provides a way to have it overridden with the `components.MediaUpload` filter.
+This is a placeholder component necessary to make it possible to provide an integration with the core blocks that handle media files. By default it renders nothing but it provides a way to have it overridden with the `editor.MediaUpload` filter.
 
 ```jsx
 import { addFilter } from '@wordpress/hooks';
@@ -64,11 +64,20 @@ If allowedTypes is unset all mime types should be allowed.
 -   Required: No
 -   Platform: Web | Mobile
 
+### mode
+
+Value of Frame content default mode like 'browse', 'upload' etc.
+
+-   Type: `String`
+-   Required: No
+-   Default: false
+-   Platform: Web
+
 ### multiple
 
-Whether to allow multiple selections or not.
+Whether to allow multiple selection of files or not. This property will also accept a string with the value `add` to allow multiple selection of files without the need to use the `Shift` or `Ctrl`/`Cmd` keys.
 
--   Type: `Boolean`
+-   Type: `Boolean|String`
 -   Required: No
 -   Default: false
 -   Platform: Web

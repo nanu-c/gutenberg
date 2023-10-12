@@ -18,7 +18,7 @@ for how to use `ToolsPanelItem`.
 
 ## Props
 
-### `hasValue`: `function`
+### `hasValue`: `() => boolean`
 
 This is called when building the `ToolsPanel` menu to determine the item's
 initial checked state.
@@ -31,7 +31,8 @@ This prop identifies the current item as being displayed by default. This means
 it will show regardless of whether it has a value set or is toggled on in the
 panel's menu.
 
--   Required: Yes
+-   Required: No
+-   Default: `false`
 
 ### `label`: `string`
 
@@ -45,31 +46,32 @@ A panel item's `label` should be unique among all items within a single panel.
 
 -   Required: Yes
 
-### `onDeselect`: `function`
+### `onDeselect`: `() => void`
 
 Called when this item is deselected in the `ToolsPanel` menu. This is normally
 used to reset the panel item control's value.
 
 -   Required: No
 
-### `onSelect`: `function`
+### `onSelect`: `() => void`
 
 A callback to take action when this item is selected in the `ToolsPanel` menu.
 
 -   Required: No
 
-### `panelId`: `string`
+### `panelId`: `string | null`
 
 Panel items will ensure they are only registering with their intended panel by
-comparing the `panelId` props set on both the item and the panel itself. This
+comparing the `panelId` props set on both the item and the panel itself, or if the `panelId` is explicitly `null`. This
 allows items to be injected from a shared source.
 
 -   Required: No
 
-### `resetAllFilter`: `function`
+### `resetAllFilter`: `( attributes?: any ) => any`
 
 A `ToolsPanel` will collect each item's `resetAllFilter` and pass an array of
 these functions through to the panel's `resetAll` callback. They can then be
 iterated over to perform additional tasks.
 
 -   Required: No
+-   Default: `() => {}`

@@ -1,9 +1,4 @@
 /**
- * External dependencies
- */
-import { filter, without } from 'lodash';
-
-/**
  * WordPress dependencies
  */
 import {
@@ -22,7 +17,6 @@ import { layout, footer, header } from '@wordpress/icons';
  * Internal dependencies
  */
 import * as _selectors from '../selectors';
-import { PREFERENCES_DEFAULTS } from '../defaults';
 
 const selectors = { ..._selectors };
 const selectorNames = Object.keys( selectors );
@@ -79,10 +73,6 @@ selectorNames.forEach( ( name ) => {
 					...this.getRawEntityRecord(),
 					...this.getEntityRecordEdits(),
 				};
-			},
-
-			isSavingEntityRecord() {
-				return state.saving && state.saving.requesting;
 			},
 
 			getLastEntitySaveError() {
@@ -154,7 +144,6 @@ const {
 	hasEditorUndo,
 	hasEditorRedo,
 	isEditedPostNew,
-	hasChangedContent,
 	isEditedPostDirty,
 	hasNonPostEntityChanges,
 	isCleanNewPost,
@@ -182,7 +171,6 @@ const {
 	didPostSaveRequestFail,
 	getSuggestedPostFormat,
 	getEditedPostContent,
-	isPublishSidebarEnabled,
 	isPermalinkEditable,
 	getPermalink,
 	getPermalinkParts,
@@ -229,7 +217,9 @@ describe( 'selectors', () => {
 	let cachedSelectors;
 
 	beforeAll( () => {
-		cachedSelectors = filter( selectors, ( selector ) => selector.clear );
+		cachedSelectors = Object.entries( selectors )
+			.filter( ( [ , selector ] ) => selector.clear )
+			.map( ( [ , selector ] ) => selector );
 	} );
 
 	beforeEach( () => {
@@ -270,7 +260,7 @@ describe( 'selectors', () => {
 			parent: [ 'core/test-block-b' ],
 		} );
 
-		registerBlockType( 'core/test-freeform', {
+		registerBlockType( 'core/freeform', {
 			save: ( props ) => <RawHTML>{ props.attributes.content }</RawHTML>,
 			category: 'text',
 			title: 'Test Freeform Content Handler',
@@ -297,7 +287,7 @@ describe( 'selectors', () => {
 			save: () => null,
 		} );
 
-		setFreeformContentHandlerName( 'core/test-freeform' );
+		setFreeformContentHandlerName( 'core/freeform' );
 		setDefaultBlockName( 'core/test-default' );
 
 		cachedSelectors.forEach( ( { clear } ) => clear() );
@@ -308,7 +298,7 @@ describe( 'selectors', () => {
 		unregisterBlockType( 'core/test-block-a' );
 		unregisterBlockType( 'core/test-block-b' );
 		unregisterBlockType( 'core/test-block-c' );
-		unregisterBlockType( 'core/test-freeform' );
+		unregisterBlockType( 'core/freeform' );
 		unregisterBlockType( 'core/test-default' );
 
 		setFreeformContentHandlerName( undefined );
@@ -394,57 +384,6 @@ describe( 'selectors', () => {
 			};
 
 			expect( isEditedPostNew( state ) ).toBe( false );
-		} );
-	} );
-
-	describe( 'hasChangedContent', () => {
-		it( 'should return false if no dirty blocks nor content property edit', () => {
-			const state = {
-				editor: {
-					present: {
-						blocks: {
-							isDirty: false,
-						},
-						edits: {},
-					},
-				},
-			};
-
-			expect( hasChangedContent( state ) ).toBe( false );
-		} );
-
-		it( 'should return true if dirty blocks', () => {
-			const state = {
-				editor: {
-					present: {
-						blocks: {
-							isDirty: true,
-							value: [],
-						},
-						edits: {},
-					},
-				},
-			};
-
-			expect( hasChangedContent( state ) ).toBe( true );
-		} );
-
-		it( 'should return true if content property edit', () => {
-			const state = {
-				editor: {
-					present: {
-						blocks: {
-							isDirty: false,
-							value: [],
-						},
-						edits: {
-							content: 'text mode edited',
-						},
-					},
-				},
-			};
-
-			expect( hasChangedContent( state ) ).toBe( true );
 		} );
 	} );
 
@@ -785,6 +724,31 @@ describe( 'selectors', () => {
 				a: 1,
 				b: 2,
 			} );
+		} );
+
+		it( 'should return the same value for mergeable properties when called multiple times', () => {
+			const state = {
+				currentPost: {
+					meta: {
+						a: 1,
+						b: 1,
+					},
+				},
+				editor: {
+					present: {
+						edits: {
+							meta: {
+								b: 2,
+							},
+						},
+					},
+				},
+				initialEdits: {},
+			};
+
+			expect( getEditedPostAttribute( state, 'meta' ) ).toBe(
+				getEditedPostAttribute( state, 'meta' )
+			);
 		} );
 	} );
 
@@ -1311,7 +1275,7 @@ describe( 'selectors', () => {
 					title: 'sassel',
 				},
 				saving: {
-					requesting: true,
+					pending: true,
 				},
 			};
 
@@ -1377,7 +1341,9 @@ describe( 'selectors', () => {
 								},
 							],
 						},
-						edits: {},
+						edits: {
+							content: () => {},
+						},
 					},
 				},
 				initialEdits: {},
@@ -1396,7 +1362,7 @@ describe( 'selectors', () => {
 							value: [
 								{
 									clientId: 123,
-									name: 'core/test-freeform',
+									name: 'core/freeform',
 									isValid: true,
 									attributes: {
 										content: '',
@@ -1423,7 +1389,7 @@ describe( 'selectors', () => {
 							value: [
 								{
 									clientId: 123,
-									name: 'core/test-freeform',
+									name: 'core/freeform',
 									isValid: true,
 									attributes: {
 										content: '',
@@ -1460,9 +1426,8 @@ describe( 'selectors', () => {
 				currentPost: {
 					title: 'sassel',
 				},
-				saving: {
-					requesting: true,
-				},
+				postAutosavingLock: {},
+				saving: {},
 				getCurrentUser() {},
 				hasFetchedAutosaves() {
 					return false;
@@ -1491,9 +1456,8 @@ describe( 'selectors', () => {
 				currentPost: {
 					title: 'sassel',
 				},
-				saving: {
-					requesting: true,
-				},
+				postAutosavingLock: {},
+				saving: {},
 				getCurrentUser() {},
 				hasFetchedAutosaves() {
 					return true;
@@ -1571,11 +1535,9 @@ describe( 'selectors', () => {
 			const state = {
 				editor: {
 					present: {
-						blocks: {
-							value: [],
-							isDirty: true,
+						edits: {
+							content: () => 'new-content',
 						},
-						edits: {},
 					},
 				},
 				currentPost: {
@@ -1600,10 +1562,11 @@ describe( 'selectors', () => {
 		} );
 
 		it( 'should return true if title or excerpt have changed', () => {
-			for ( const variantField of [ 'title', 'excerpt' ] ) {
-				for ( const constantField of without(
-					[ 'title', 'excerpt' ],
-					variantField
+			const fields = [ 'title', 'excerpt' ];
+
+			for ( const variantField of fields ) {
+				for ( const constantField of fields.filter(
+					( f ) => f !== variantField
 				) ) {
 					const state = {
 						editor: {
@@ -1655,14 +1618,13 @@ describe( 'selectors', () => {
 			const state = {
 				editor: {
 					present: {
-						blocks: {
-							value: [],
-						},
 						edits: {},
 					},
 				},
 				initialEdits: {},
-				currentPost: {},
+				currentPost: {
+					content: '',
+				},
 			};
 
 			expect( isEditedPostEmpty( state ) ).toBe( true );
@@ -1684,7 +1646,9 @@ describe( 'selectors', () => {
 								},
 							],
 						},
-						edits: {},
+						edits: {
+							content: () => {},
+						},
 					},
 				},
 				initialEdits: {},
@@ -1714,7 +1678,9 @@ describe( 'selectors', () => {
 								},
 							],
 						},
-						edits: {},
+						edits: {
+							content: () => {},
+						},
 					},
 				},
 				initialEdits: {},
@@ -1724,7 +1690,7 @@ describe( 'selectors', () => {
 			expect( isEditedPostEmpty( state ) ).toBe( true );
 		} );
 
-		it( 'should return false if blocks, but empty content edit', () => {
+		it( 'should return true if blocks, but empty content edit', () => {
 			const state = {
 				editor: {
 					present: {
@@ -1751,7 +1717,7 @@ describe( 'selectors', () => {
 				},
 			};
 
-			expect( isEditedPostEmpty( state ) ).toBe( false );
+			expect( isEditedPostEmpty( state ) ).toBe( true );
 		} );
 
 		it( 'should return true if the post has an empty content property', () => {
@@ -1773,7 +1739,7 @@ describe( 'selectors', () => {
 			expect( isEditedPostEmpty( state ) ).toBe( true );
 		} );
 
-		it( 'should return true if edits include a non-empty content property, but blocks are empty', () => {
+		it( 'should return false if edits include a non-empty content property', () => {
 			const state = {
 				editor: {
 					present: {
@@ -1789,7 +1755,7 @@ describe( 'selectors', () => {
 				currentPost: {},
 			};
 
-			expect( isEditedPostEmpty( state ) ).toBe( true );
+			expect( isEditedPostEmpty( state ) ).toBe( false );
 		} );
 
 		it( 'should return true if empty classic block', () => {
@@ -1800,7 +1766,7 @@ describe( 'selectors', () => {
 							value: [
 								{
 									clientId: 123,
-									name: 'core/test-freeform',
+									name: 'core/freeform',
 									isValid: true,
 									attributes: {
 										content: '',
@@ -1808,7 +1774,9 @@ describe( 'selectors', () => {
 								},
 							],
 						},
-						edits: {},
+						edits: {
+							content: () => {},
+						},
 					},
 				},
 				initialEdits: {},
@@ -1826,7 +1794,7 @@ describe( 'selectors', () => {
 							value: [
 								{
 									clientId: 123,
-									name: 'core/test-freeform',
+									name: 'core/freeform',
 									isValid: true,
 									attributes: {
 										content: '',
@@ -1854,7 +1822,7 @@ describe( 'selectors', () => {
 							value: [
 								{
 									clientId: 123,
-									name: 'core/test-freeform',
+									name: 'core/freeform',
 									isValid: true,
 									attributes: {
 										content: 'Test Data',
@@ -1882,7 +1850,7 @@ describe( 'selectors', () => {
 							value: [
 								{
 									clientId: 123,
-									name: 'core/test-freeform',
+									name: 'core/freeform',
 									isValid: true,
 									attributes: {
 										content: '',
@@ -1890,7 +1858,7 @@ describe( 'selectors', () => {
 								},
 								{
 									clientId: 456,
-									name: 'core/test-freeform',
+									name: 'core/freeform',
 									isValid: true,
 									attributes: {
 										content: '',
@@ -1913,7 +1881,7 @@ describe( 'selectors', () => {
 
 	describe( 'isEditedPostBeingScheduled', () => {
 		it( 'should return true for posts with a future date', () => {
-			const time = Date.now() + 1000 * 3600 * 24 * 7; // 7 days in the future
+			const time = Date.now() + 1000 * 3600 * 24 * 7; // 7 days in the future.
 			const date = new Date( time );
 			const state = {
 				editor: {
@@ -2075,7 +2043,7 @@ describe( 'selectors', () => {
 		it( 'should return true if the post is currently being saved', () => {
 			const state = {
 				saving: {
-					requesting: true,
+					pending: true,
 				},
 			};
 
@@ -2085,7 +2053,7 @@ describe( 'selectors', () => {
 		it( 'should return false if the post is not currently being saved', () => {
 			const state = {
 				saving: {
-					requesting: false,
+					pending: false,
 				},
 			};
 
@@ -2151,7 +2119,7 @@ describe( 'selectors', () => {
 			expect( didPostSaveRequestSucceed( state ) ).toBe( true );
 		} );
 
-		it( 'should return true if the post save request has failed', () => {
+		it( 'should return false if the post save request has failed', () => {
 			const state = {
 				saving: {
 					successful: false,
@@ -2173,7 +2141,7 @@ describe( 'selectors', () => {
 			expect( didPostSaveRequestFail( state ) ).toBe( true );
 		} );
 
-		it( 'should return true if the post save request is successful', () => {
+		it( 'should return false if the post save request is successful', () => {
 			const state = {
 				saving: {
 					error: false,
@@ -2214,6 +2182,7 @@ describe( 'selectors', () => {
 									attributes: {
 										providerNameSlug: 'instagram',
 									},
+									innerBlocks: [],
 								},
 							],
 						},
@@ -2236,6 +2205,7 @@ describe( 'selectors', () => {
 									clientId: 567,
 									name: 'core/embed',
 									attributes: {},
+									innerBlocks: [],
 								},
 							],
 						},
@@ -2258,11 +2228,13 @@ describe( 'selectors', () => {
 									clientId: 123,
 									name: 'core/image',
 									attributes: {},
+									innerBlocks: [],
 								},
 								{
 									clientId: 456,
 									name: 'core/quote',
 									attributes: {},
+									innerBlocks: [],
 								},
 							],
 						},
@@ -2286,6 +2258,7 @@ describe( 'selectors', () => {
 									clientId: 123,
 									name: 'core/image',
 									attributes: {},
+									innerBlocks: [],
 								},
 							],
 						},
@@ -2309,6 +2282,7 @@ describe( 'selectors', () => {
 									clientId: 456,
 									name: 'core/quote',
 									attributes: {},
+									innerBlocks: [],
 								},
 							],
 						},
@@ -2334,6 +2308,7 @@ describe( 'selectors', () => {
 									attributes: {
 										providerNameSlug: 'youtube',
 									},
+									innerBlocks: [],
 								},
 							],
 						},
@@ -2359,6 +2334,7 @@ describe( 'selectors', () => {
 									attributes: {
 										providerNameSlug: 'soundcloud',
 									},
+									innerBlocks: [],
 								},
 							],
 						},
@@ -2382,11 +2358,13 @@ describe( 'selectors', () => {
 									clientId: 456,
 									name: 'core/quote',
 									attributes: {},
+									innerBlocks: [],
 								},
 								{
 									clientId: 789,
 									name: 'core/paragraph',
 									attributes: {},
+									innerBlocks: [],
 								},
 							],
 						},
@@ -2473,7 +2451,7 @@ describe( 'selectors', () => {
 		} );
 
 		it( "returns removep'd serialization of blocks for single unknown", () => {
-			const unknownBlock = createBlock( 'core/test-freeform', {
+			const unknownBlock = createBlock( 'core/freeform', {
 				content: '<p>foo</p>',
 			} );
 			const state = {
@@ -2495,10 +2473,10 @@ describe( 'selectors', () => {
 		} );
 
 		it( "returns non-removep'd serialization of blocks for multiple unknown", () => {
-			const firstUnknown = createBlock( 'core/test-freeform', {
+			const firstUnknown = createBlock( 'core/freeform', {
 				content: '<p>foo</p>',
 			} );
-			const secondUnknown = createBlock( 'core/test-freeform', {
+			const secondUnknown = createBlock( 'core/freeform', {
 				content: '<p>bar</p>',
 			} );
 			const state = {
@@ -2566,39 +2544,6 @@ describe( 'selectors', () => {
 
 			expect( content ).toBe(
 				'<!-- wp:test-default {"modified":true} /-->'
-			);
-		} );
-	} );
-
-	describe( 'isPublishSidebarEnabled', () => {
-		it( 'should return the value on state if it is thruthy', () => {
-			const state = {
-				preferences: {
-					isPublishSidebarEnabled: true,
-				},
-			};
-			expect( isPublishSidebarEnabled( state ) ).toBe(
-				state.preferences.isPublishSidebarEnabled
-			);
-		} );
-
-		it( 'should return the value on state if it is falsy', () => {
-			const state = {
-				preferences: {
-					isPublishSidebarEnabled: false,
-				},
-			};
-			expect( isPublishSidebarEnabled( state ) ).toBe(
-				state.preferences.isPublishSidebarEnabled
-			);
-		} );
-
-		it( 'should return the default value if there is no isPublishSidebarEnabled key on state', () => {
-			const state = {
-				preferences: {},
-			};
-			expect( isPublishSidebarEnabled( state ) ).toBe(
-				PREFERENCES_DEFAULTS.isPublishSidebarEnabled
 			);
 		} );
 	} );
@@ -2906,9 +2851,8 @@ describe( 'selectors', () => {
 		} );
 
 		it( 'assigns an icon to each area', () => {
-			const templatePartAreas = __experimentalGetDefaultTemplatePartAreas(
-				state
-			);
+			const templatePartAreas =
+				__experimentalGetDefaultTemplatePartAreas( state );
 			templatePartAreas.forEach( ( area ) =>
 				expect( area.icon ).not.toBeNull()
 			);
@@ -3003,7 +2947,7 @@ describe( 'selectors', () => {
 			expect(
 				__experimentalGetTemplateInfo( state, {
 					slug: 'index',
-					excerpt: { raw: 'test description' },
+					description: { raw: 'test description' },
 				} ).description
 			).toEqual( 'test description' );
 		} );
@@ -3031,7 +2975,7 @@ describe( 'selectors', () => {
 			expect(
 				__experimentalGetTemplateInfo( state, {
 					slug: 'index',
-					excerpt: { raw: 'test description' },
+					description: { raw: 'test description' },
 				} )
 			).toEqual( {
 				title: 'Default (Index)',
@@ -3043,7 +2987,7 @@ describe( 'selectors', () => {
 				__experimentalGetTemplateInfo( state, {
 					slug: 'index',
 					title: { rendered: 'test title' },
-					excerpt: { raw: 'test description' },
+					description: { raw: 'test description' },
 				} )
 			).toEqual( {
 				title: 'test title',

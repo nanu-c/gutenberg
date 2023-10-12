@@ -5,26 +5,28 @@
  * @package gutenberg
  */
 
-/**
- * The main entry point for the Gutenberg experiments page.
- *
- * @since 6.3.0
- */
-function the_gutenberg_experiments() {
-	?>
-	<div
-		id="experiments-editor"
-		class="wrap"
-	>
-	<h1><?php echo __( 'Experimental settings', 'gutenberg' ); ?></h1>
-	<?php settings_errors(); ?>
-	<form method="post" action="options.php">
-		<?php settings_fields( 'gutenberg-experiments' ); ?>
-		<?php do_settings_sections( 'gutenberg-experiments' ); ?>
-		<?php submit_button(); ?>
-	</form>
-	</div>
-	<?php
+if ( ! function_exists( 'the_gutenberg_experiments' ) ) {
+	/**
+	 * The main entry point for the Gutenberg experiments page.
+	 *
+	 * @since 6.3.0
+	 */
+	function the_gutenberg_experiments() {
+		?>
+		<div
+			id="experiments-editor"
+			class="wrap"
+		>
+		<h1><?php echo __( 'Experimental settings', 'gutenberg' ); ?></h1>
+		<?php settings_errors(); ?>
+		<form method="post" action="options.php">
+			<?php settings_fields( 'gutenberg-experiments' ); ?>
+			<?php do_settings_sections( 'gutenberg-experiments' ); ?>
+			<?php submit_button(); ?>
+		</form>
+		</div>
+		<?php
+	}
 }
 
 /**
@@ -40,28 +42,102 @@ function gutenberg_initialize_experiments_settings() {
 		'gutenberg_display_experiment_section',
 		'gutenberg-experiments'
 	);
+
 	add_settings_field(
-		'gutenberg-navigation',
-		__( 'Navigation', 'gutenberg' ),
+		'gutenberg-sync-collaboration',
+		__( 'Live Collaboration and offline persistence ', 'gutenberg' ),
 		'gutenberg_display_experiment_field',
 		'gutenberg-experiments',
 		'gutenberg_experiments_section',
 		array(
-			'label' => __( 'Enable Navigation screen', 'gutenberg' ),
-			'id'    => 'gutenberg-navigation',
+			'label' => __( 'Enable the live collaboration and offline persistence between peers', 'gutenberg' ),
+			'id'    => 'gutenberg-sync-collaboration',
 		)
 	);
+
 	add_settings_field(
-		'gutenberg-gallery-refactor',
-		__( 'Gallery block experiment', 'gutenberg' ),
+		'gutenberg-zoomed-out-view',
+		__( 'Zoomed out view ', 'gutenberg' ),
 		'gutenberg_display_experiment_field',
 		'gutenberg-experiments',
 		'gutenberg_experiments_section',
 		array(
-			'label' => __( 'Test a new gallery block that uses nested image blocks (Warning: The new gallery is not compatible with WordPress mobile apps prior to version 18.2. If you use the mobile app, please update to the latest version to avoid content loss.)', 'gutenberg' ),
-			'id'    => 'gutenberg-gallery-refactor',
+			'label' => __( 'Test a new zoomed out view on the site editor (Warning: The new feature is not ready. You may experience UX issues that are being addressed)', 'gutenberg' ),
+			'id'    => 'gutenberg-zoomed-out-view',
 		)
 	);
+
+	add_settings_field(
+		'gutenberg-dataviews',
+		__( 'New admin views', 'gutenberg' ),
+		'gutenberg_display_experiment_field',
+		'gutenberg-experiments',
+		'gutenberg_experiments_section',
+		array(
+			'label' => __( 'Test the new views for different entities like pages.', 'gutenberg' ),
+			'id'    => 'gutenberg-dataviews',
+		)
+	);
+
+	add_settings_field(
+		'gutenberg-color-randomizer',
+		__( 'Color randomizer ', 'gutenberg' ),
+		'gutenberg_display_experiment_field',
+		'gutenberg-experiments',
+		'gutenberg_experiments_section',
+		array(
+			'label' => __( 'Test the Global Styles color randomizer; a utility that lets you mix the current color palette pseudo-randomly.', 'gutenberg' ),
+			'id'    => 'gutenberg-color-randomizer',
+		)
+	);
+	add_settings_field(
+		'gutenberg-form-blocks',
+		__( 'Form and input blocks ', 'gutenberg' ),
+		'gutenberg_display_experiment_field',
+		'gutenberg-experiments',
+		'gutenberg_experiments_section',
+		array(
+			'label' => __( 'Test new blocks to allow building forms (Warning: The new feature is not ready. You may experience UX issues that are being addressed)', 'gutenberg' ),
+			'id'    => 'gutenberg-form-blocks',
+		)
+	);
+
+	add_settings_field(
+		'gutenberg-group-grid-variation',
+		__( 'Grid variation for Group block ', 'gutenberg' ),
+		'gutenberg_display_experiment_field',
+		'gutenberg-experiments',
+		'gutenberg_experiments_section',
+		array(
+			'label' => __( 'Test the Grid layout type as a new variation of Group block.', 'gutenberg' ),
+			'id'    => 'gutenberg-group-grid-variation',
+		)
+	);
+
+	add_settings_field(
+		'gutenberg-no-tinymce',
+		__( 'Disable TinyMCE and Classic block', 'gutenberg' ),
+		'gutenberg_display_experiment_field',
+		'gutenberg-experiments',
+		'gutenberg_experiments_section',
+		array(
+			'label' => __( 'Disable TinyMCE and Classic block', 'gutenberg' ),
+			'id'    => 'gutenberg-no-tinymce',
+		)
+	);
+
+	add_settings_field(
+		'gutenberg-custom-fields',
+		__( 'Connections', 'gutenberg' ),
+		'gutenberg_display_experiment_field',
+		'gutenberg-experiments',
+		'gutenberg_experiments_section',
+		array(
+			'label' => __( 'Test Connections', 'gutenberg' ),
+			'id'    => 'gutenberg-connections',
+		)
+	);
+
 	register_setting(
 		'gutenberg-experiments',
 		'gutenberg-experiments'
@@ -98,25 +174,4 @@ function gutenberg_display_experiment_section() {
 	<p><?php echo __( "The block editor includes experimental features that are useable while they're in development. Select the ones you'd like to enable. These features are likely to change, so avoid using them in production.", 'gutenberg' ); ?></p>
 
 	<?php
-}
-
-/**
- * Extends default editor settings with experiments settings.
- *
- * @param array $settings Default editor settings.
- *
- * @return array Filtered editor settings.
- */
-function gutenberg_experiments_editor_settings( $settings ) {
-	$experiments          = get_option( 'gutenberg-experiments' );
-	$experiments_settings = array(
-		'__unstableGalleryWithImageBlocks' => isset( $experiments['gutenberg-gallery-refactor'] ),
-	);
-	return array_merge( $settings, $experiments_settings );
-}
-// This can be removed when plugin support requires WordPress 5.8.0+.
-if ( function_exists( 'get_block_editor_settings' ) ) {
-	add_filter( 'block_editor_settings_all', 'gutenberg_experiments_editor_settings' );
-} else {
-	add_filter( 'block_editor_settings', 'gutenberg_experiments_editor_settings' );
 }

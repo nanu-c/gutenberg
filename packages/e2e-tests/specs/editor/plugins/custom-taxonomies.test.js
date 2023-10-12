@@ -29,23 +29,23 @@ describe( 'Custom Taxonomies labels are used', () => {
 		const openButton = await findSidebarPanelWithTitle( 'Model' );
 		expect( openButton ).not.toBeFalsy();
 
-		// Get the classes from the panel
+		// Get the classes from the panel.
 		const buttonClassName = await (
 			await openButton.getProperty( 'className' )
-		 ).jsonValue();
+		).jsonValue();
 
 		// Open the panel if needed.
 		if ( -1 === buttonClassName.indexOf( 'is-opened' ) ) {
 			await openButton.click();
 		}
 
-		// Check the add new button
+		// Check the add new button.
 		const labelNew = await page.$x(
 			"//label[@class='components-form-token-field__label' and contains(text(), 'Add New Model')]"
 		);
 		expect( labelNew ).not.toBeFalsy();
 
-		// Fill with one entry
+		// Fill with one entry.
 		await page.type(
 			'input.components-form-token-field__input',
 			'Model 1'

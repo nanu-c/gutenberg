@@ -1,20 +1,13 @@
 /**
  * Internal dependencies
  */
-import type { Props as TruncateProps } from '../truncate/types';
+import type { TruncateProps } from '../truncate/types';
 
 /**
  * External dependencies
  */
-// eslint-disable-next-line no-restricted-imports
 import type { CSSProperties } from 'react';
-
-type TextAdjustLineHeightForInnerControls =
-	| boolean
-	| 'large'
-	| 'medium'
-	| 'small'
-	| 'xSmall';
+import type { FindAllArgs } from 'highlight-words-core';
 
 export type TextSize =
 	| 'body'
@@ -36,7 +29,7 @@ export interface Props extends TruncateProps {
 	/**
 	 * Automatically calculate the appropriate line-height value for contents that render text and Control elements (e.g. `TextInput`).
 	 */
-	adjustLineHeightForInnerControls?: TextAdjustLineHeightForInnerControls;
+	adjustLineHeightForInnerControls?: 'large' | 'medium' | 'small' | 'xSmall';
 	/**
 	 * Adjusts the text color.
 	 */
@@ -62,7 +55,7 @@ export interface Props extends TruncateProps {
 	/**
 	 * Array of search words. String search terms are automatically cast to RegExps unless `highlightEscape` is true.
 	 */
-	highlightSanitize?: import('highlight-words-core').FindAllArgs[ 'sanitize' ];
+	highlightSanitize?: FindAllArgs[ 'sanitize' ];
 	/**
 	 * Sets `Text` to have `display: block`.
 	 */

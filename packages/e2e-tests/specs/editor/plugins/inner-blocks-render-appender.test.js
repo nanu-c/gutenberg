@@ -58,7 +58,7 @@ describe( 'RenderAppender prop of InnerBlocks', () => {
 		const inserterPopover = await page.$( INSERTER_RESULTS_SELECTOR );
 		const quoteButton = (
 			await inserterPopover.$x( QUOTE_INSERT_BUTTON_SELECTOR )
-		 )[ 0 ];
+		)[ 0 ];
 
 		// Insert a quote block.
 		await quoteButton.click();
@@ -93,10 +93,13 @@ describe( 'RenderAppender prop of InnerBlocks', () => {
 		const inserterPopover = await page.$( INSERTER_RESULTS_SELECTOR );
 		const quoteButton = (
 			await inserterPopover.$x( QUOTE_INSERT_BUTTON_SELECTOR )
-		 )[ 0 ];
+		)[ 0 ];
 
 		// Insert a quote block.
 		await quoteButton.click();
+
+		// Select the quote block.
+		await page.keyboard.press( 'ArrowDown' );
 
 		// Verify if the custom block appender text changed as expected.
 		await page.waitForXPath(

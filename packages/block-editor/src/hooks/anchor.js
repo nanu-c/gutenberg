@@ -1,9 +1,4 @@
 /**
- * External dependencies
- */
-import { has } from 'lodash';
-
-/**
  * WordPress dependencies
  */
 import { addFilter } from '@wordpress/hooks';
@@ -17,6 +12,7 @@ import { Platform } from '@wordpress/element';
  * Internal dependencies
  */
 import { InspectorControls } from '../components';
+import { useBlockEditingMode } from '../components/block-editing-mode';
 
 /**
  * Regular expression matching invalid anchor characters for replacement.
@@ -24,6 +20,13 @@ import { InspectorControls } from '../components';
  * @type {RegExp}
  */
 const ANCHOR_REGEX = /[\s#]/g;
+
+const ANCHOR_SCHEMA = {
+	type: 'string',
+	source: 'attribute',
+	attribute: 'id',
+	selector: '*',
+};
 
 /**
  * Filters registered block settings, extending attributes with anchor using ID
@@ -34,20 +37,15 @@ const ANCHOR_REGEX = /[\s#]/g;
  * @return {Object} Filtered block settings.
  */
 export function addAttribute( settings ) {
-	// allow blocks to specify their own attribute definition with default values if needed.
-	if ( has( settings.attributes, [ 'anchor', 'type' ] ) ) {
+	// Allow blocks to specify their own attribute definition with default values if needed.
+	if ( 'type' in ( settings.attributes?.anchor ?? {} ) ) {
 		return settings;
 	}
 	if ( hasBlockSupport( settings, 'anchor' ) ) {
 		// Gracefully handle if settings.attributes is undefined.
 		settings.attributes = {
 			...settings.attributes,
-			anchor: {
-				type: 'string',
-				source: 'attribute',
-				attribute: 'id',
-				selector: '*',
-			},
+			anchor: ANCHOR_SCHEMA,
 		};
 	}
 
@@ -58,19 +56,21 @@ export function addAttribute( settings ) {
  * Override the default edit UI to include a new block inspector control for
  * assigning the anchor ID, if block supports anchor.
  *
- * @param {WPComponent} BlockEdit Original component.
+ * @param {Component} BlockEdit Original component.
  *
- * @return {WPComponent} Wrapped component.
+ * @return {Component} Wrapped component.
  */
 export const withInspectorControl = createHigherOrderComponent(
 	( BlockEdit ) => {
 		return ( props ) => {
 			const hasAnchor = hasBlockSupport( props.name, 'anchor' );
+			const blockEditingMode = useBlockEditingMode();
 
 			if ( hasAnchor && props.isSelected ) {
 				const isWeb = Platform.OS === 'web';
 				const textControl = (
 					<TextControl
+						__nextHasNoMarginBottom
 						className="html-anchor-control"
 						label={ __( 'HTML anchor' ) }
 						help={
@@ -81,9 +81,9 @@ export const withInspectorControl = createHigherOrderComponent(
 
 								{ isWeb && (
 									<ExternalLink
-										href={
-											'https://wordpress.org/support/article/page-jumps/'
-										}
+										href={ __(
+											'https://wordpress.org/documentation/article/page-jumps/'
+										) }
 									>
 										{ __( 'Learn more about anchors' ) }
 									</ExternalLink>
@@ -106,8 +106,8 @@ export const withInspectorControl = createHigherOrderComponent(
 				return (
 					<>
 						<BlockEdit { ...props } />
-						{ isWeb && (
-							<InspectorControls __experimentalGroup="advanced">
+						{ isWeb && blockEditingMode === 'default' && (
+							<InspectorControls group="advanced">
 								{ textControl }
 							</InspectorControls>
 						) }
@@ -115,7 +115,7 @@ export const withInspectorControl = createHigherOrderComponent(
 						 * We plan to remove scoping anchors to 'core/heading' to support
 						 * anchors for all eligble blocks. Additionally we plan to explore
 						 * leveraging InspectorAdvancedControls instead of a custom
-						 * PanelBody title. https://git.io/Jtcov
+						 * PanelBody title. https://github.com/WordPress/gutenberg/issues/28363
 						 */ }
 						{ ! isWeb && props.name === 'core/heading' && (
 							<InspectorControls>

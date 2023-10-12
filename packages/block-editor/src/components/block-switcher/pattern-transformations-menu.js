@@ -60,10 +60,7 @@ function PreviewPatternsPopover( { patterns, onSelect } ) {
 					className="block-editor-block-switcher__preview__popover"
 					position="bottom right"
 				>
-					<div className="block-editor-block-switcher__preview">
-						<div className="block-editor-block-switcher__preview-title">
-							{ __( 'Preview' ) }
-						</div>
+					<div className="block-editor-block-switcher__preview is-pattern-list-preview">
 						<BlockPatternsList
 							patterns={ patterns }
 							onSelect={ onSelect }
@@ -105,15 +102,15 @@ function BlockPattern( { pattern, onSelect, composite } ) {
 		`${ baseClassName }-list__item-description`
 	);
 	return (
-		<div
-			className={ `${ baseClassName }-list__list-item` }
-			aria-label={ pattern.title }
-			aria-describedby={ pattern.description ? descriptionId : undefined }
-		>
+		<div className={ `${ baseClassName }-list__list-item` }>
 			<CompositeItem
 				role="option"
 				as="div"
 				{ ...composite }
+				aria-label={ pattern.title }
+				aria-describedby={
+					pattern.description ? descriptionId : undefined
+				}
 				className={ `${ baseClassName }-list__item` }
 				onClick={ () => onSelect( pattern.transformedBlocks ) }
 			>

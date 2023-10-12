@@ -1,6 +1,11 @@
 package org.wordpress.mobile.ReactNativeGutenbergBridge;
 
+import android.content.Context;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
+import android.provider.Settings;
 
 import androidx.annotation.Nullable;
 
@@ -42,12 +47,17 @@ public class RNReactNativeGutenbergBridgeModule extends ReactContextBaseJavaModu
     private static final String EVENT_NAME_FOCUS_TITLE = "setFocusOnTitle";
     private static final String EVENT_NAME_MEDIA_APPEND = "mediaAppend";
     private static final String EVENT_NAME_TOGGLE_HTML_MODE = "toggleHTMLMode";
+    private static final String EVENT_NAME_POST_SAVE_EVENT = "postHasBeenJustSaved";
     private static final String EVENT_NAME_NOTIFY_MODAL_CLOSED = "notifyModalClosed";
     private static final String EVENT_NAME_PREFERRED_COLOR_SCHEME = "preferredColorScheme";
     private static final String EVENT_NAME_MEDIA_REPLACE_BLOCK = "replaceBlock";
     private static final String EVENT_NAME_UPDATE_EDITOR_SETTINGS = "updateEditorSettings";
     private static final String EVENT_NAME_SHOW_NOTICE = "showNotice";
     private static final String EVENT_NAME_SHOW_EDITOR_HELP = "showEditorHelp";
+
+    private static final String EVENT_NAME_ON_UNDO_PRESSED = "onUndoPressed";
+
+    private static final String EVENT_NAME_ON_REDO_PRESSED = "onRedoPressed";
 
     private static final String MAP_KEY_UPDATE_HTML = "html";
     private static final String MAP_KEY_UPDATE_TITLE = "title";
@@ -60,6 +70,8 @@ public class RNReactNativeGutenbergBridgeModule extends ReactContextBaseJavaModu
     private static final String MAP_KEY_THEME_UPDATE_COLORS = "colors";
     private static final String MAP_KEY_THEME_UPDATE_GRADIENTS = "gradients";
     private static final String MAP_KEY_THEME_UPDATE_RAW_STYLES = "rawStyles";
+    private static final String MAP_KEY_THEME_UPDATE_RAW_FEATURES = "rawFeatures";
+    private static final String MAP_KEY_GALLERY_WITH_IMAGE_BLOCKS = "galleryWithImageBlocks";
     public static final String MAP_KEY_MEDIA_FINAL_SAVE_RESULT_SUCCESS_VALUE = "success";
 
     private static final String MAP_KEY_IS_PREFERRED_COLOR_SCHEME_DARK = "isPreferredColorSchemeDark";
@@ -148,6 +160,14 @@ public class RNReactNativeGutenbergBridgeModule extends ReactContextBaseJavaModu
         Serializable colors = editorTheme.getSerializable(MAP_KEY_THEME_UPDATE_COLORS);
         Serializable gradients = editorTheme.getSerializable(MAP_KEY_THEME_UPDATE_GRADIENTS);
         Serializable rawStyles = editorTheme.getSerializable(MAP_KEY_THEME_UPDATE_RAW_STYLES);
+        Serializable rawFeatures = editorTheme.getSerializable(MAP_KEY_THEME_UPDATE_RAW_FEATURES);
+
+        // We must assign null here to distinguish between a missing value and false
+        Boolean galleryWithImageBlocks = null;
+        if (editorTheme.containsKey(MAP_KEY_GALLERY_WITH_IMAGE_BLOCKS)) {
+            galleryWithImageBlocks = editorTheme.getBoolean(MAP_KEY_GALLERY_WITH_IMAGE_BLOCKS);
+        }
+
 
         if (colors != null) {
             writableMap.putArray(MAP_KEY_THEME_UPDATE_COLORS, Arguments.fromList((ArrayList)colors));
@@ -161,11 +181,37 @@ public class RNReactNativeGutenbergBridgeModule extends ReactContextBaseJavaModu
             writableMap.putString(MAP_KEY_THEME_UPDATE_RAW_STYLES, rawStyles.toString());
         }
 
+        if (rawFeatures != null) {
+            writableMap.putString(MAP_KEY_THEME_UPDATE_RAW_FEATURES, rawFeatures.toString());
+        }
+
+        if (galleryWithImageBlocks != null) {
+            writableMap.putBoolean(MAP_KEY_GALLERY_WITH_IMAGE_BLOCKS, galleryWithImageBlocks);
+        }
+
         emitToJS(EVENT_NAME_UPDATE_EDITOR_SETTINGS, writableMap);
     }
 
     public void showEditorHelp() {
         emitToJS(EVENT_NAME_SHOW_EDITOR_HELP, null);
+    }
+
+    public void onUndoPressed() {
+        emitToJS(EVENT_NAME_ON_UNDO_PRESSED, null);
+    }
+
+    public void onRedoPressed() {
+        emitToJS(EVENT_NAME_ON_REDO_PRESSED, null);
+    }
+
+    @ReactMethod
+    public void addListener(String eventName) {
+        // Keep: Required for RN built in Event Emitter Calls.
+    }
+
+    @ReactMethod
+    public void removeListeners(Integer count) {
+        // Keep: Required for RN built in Event Emitter Calls.
     }
 
     @ReactMethod
@@ -298,8 +344,23 @@ public class RNReactNativeGutenbergBridgeModule extends ReactContextBaseJavaModu
 
     @ReactMethod
     public void fetchRequest(String path, boolean enableCaching, Promise promise) {
-        mGutenbergBridgeJS2Parent.performRequest(path,
+        mGutenbergBridgeJS2Parent.performGetRequest(path,
                 enableCaching,
+                promise::resolve,
+                errorBundle -> {
+                    WritableMap writableMap = Arguments.makeNativeMap(errorBundle);
+                    if (writableMap.hasKey("code")) {
+                        String code = String.valueOf(writableMap.getInt("code"));
+                        promise.reject(code, new Error(), writableMap);
+                    } else {
+                        promise.reject(new Error(), writableMap);
+                    }
+                });
+    }
+
+    @ReactMethod
+    public void postRequest(String path, ReadableMap data, Promise promise) {
+        mGutenbergBridgeJS2Parent.performPostRequest(path, data,
                 promise::resolve,
                 errorBundle -> {
                     WritableMap writableMap = Arguments.makeNativeMap(errorBundle);
@@ -316,6 +377,11 @@ public class RNReactNativeGutenbergBridgeModule extends ReactContextBaseJavaModu
     public void requestUnsupportedBlockFallback(String content, String blockId, String blockName, String blockTitle) {
         mGutenbergBridgeJS2Parent.gutenbergDidRequestUnsupportedBlockFallback((savedContent, savedBlockId) ->
                 replaceBlock(savedContent, savedBlockId), content, blockId, blockName, blockTitle);
+    }
+
+    @ReactMethod
+    public void requestEmbedFullscreenPreview(String content, String title) {
+        mGutenbergBridgeJS2Parent.requestEmbedFullscreenPreview(content,title);
     }
 
     @ReactMethod
@@ -401,6 +467,10 @@ public class RNReactNativeGutenbergBridgeModule extends ReactContextBaseJavaModu
         emitToJS(EVENT_NAME_TOGGLE_HTML_MODE, null);
     }
 
+    public void sendToJSPostSaveEvent() {
+        emitToJS(EVENT_NAME_POST_SAVE_EVENT, null);
+    }
+
     public void notifyModalClosed() {
         emitToJS(EVENT_NAME_NOTIFY_MODAL_CLOSED, null);
     }
@@ -422,5 +492,45 @@ public class RNReactNativeGutenbergBridgeModule extends ReactContextBaseJavaModu
     @ReactMethod
     public void setBlockTypeImpressions(final ReadableMap impressions) {
         mGutenbergBridgeJS2Parent.setBlockTypeImpressions(impressions);
+    }
+
+    @ReactMethod
+    public void requestContactCustomerSupport() {
+        mGutenbergBridgeJS2Parent.requestContactCustomerSupport();
+    }
+
+    @ReactMethod
+    public void requestGotoCustomerSupportOptions() {
+        mGutenbergBridgeJS2Parent.requestGotoCustomerSupportOptions();
+    }
+
+    @ReactMethod
+    public void sendEventToHost(final String eventName, final ReadableMap properties) {
+        mGutenbergBridgeJS2Parent.sendEventToHost(eventName, properties);
+    }
+
+    @ReactMethod
+    public void toggleUndoButton(final boolean isDisabled) {
+        mGutenbergBridgeJS2Parent.toggleUndoButton(isDisabled);
+    }
+
+    @ReactMethod
+    public void toggleRedoButton(final boolean isDisabled) {
+        mGutenbergBridgeJS2Parent.toggleRedoButton(isDisabled);
+    }
+
+    @ReactMethod
+    public void generateHapticFeedback() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            int hapticFeedbackEnabled = Settings.System.getInt(mReactContext.getContentResolver(), Settings.System.HAPTIC_FEEDBACK_ENABLED, 0);
+            if (hapticFeedbackEnabled == 0) {
+                return;
+            }
+            VibrationEffect tickEffect = VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK);
+            Vibrator vibrator = (Vibrator) mReactContext.getSystemService(Context.VIBRATOR_SERVICE);
+            if (vibrator != null) {
+                vibrator.vibrate(tickEffect);
+            }
+        }
     }
 }

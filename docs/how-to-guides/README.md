@@ -6,13 +6,15 @@ The new editor is highly flexible, like most of WordPress. You can build custom 
 
 The editor is about blocks, and the main extensibility API is the Block API. It allows you to create your own static blocks, [Dynamic Blocks](/docs/how-to-guides/block-tutorial/creating-dynamic-blocks.md) ( rendered on the server ) and also blocks capable of saving data to Post Meta for more structured content.
 
-If you want to learn more about block creation, see the [Create a Block tutorial](/docs/getting-started/tutorials/create-block/README.md) for the best place to start.
+If you want to learn more about block creation, see the [Create a Block tutorial](/docs/getting-started/create-block/README.md) for the best place to start.
 
 ## Extending Blocks
 
 It is also possible to modify the behavior of existing blocks or even remove them completely using filters.
 
 Learn more in the [Block Filters](/docs/reference-guides/filters/block-filters.md) section.
+
+Specifically for `Query Loop` block, besides the available filters, there are more ways to extend it and create bespoke versions of it. Learn more in the [Extending the Query Loop block](/docs/how-to-guides/block-tutorial/extending-the-query-loop-block.md) section.
 
 ## Extending the Editor UI
 
@@ -24,15 +26,13 @@ You can also filter certain aspects of the editor; this is documented on the [Ed
 
 ## Meta Boxes
 
-Porting PHP meta boxes to blocks or sidebar plugins is highly encouraged, learn how through these [meta data tutorials](/docs/how-to-guides/metabox/README.md).
-
-See how the new editor [supports existing Meta Boxes](/docs/reference-guides/backward-compatibility/meta-box.md).
+Porting PHP meta boxes to blocks or sidebar plugins is highly encouraged, learn how in the [meta box](/docs/how-to-guides/metabox.md) and [sidebar plugin](/docs/how-to-guides/plugin-sidebar-0.md) guides.
 
 ## Theme Support
 
 By default, blocks provide their styles to enable basic support for blocks in themes without any change. Themes can add/override these styles, or rely on defaults.
 
-There are some advanced block features which require opt-in support in the theme. See [theme support](/docs/how-to-guides/themes/theme-support.md).
+There are some advanced block features which require opt-in support in the theme. See [theme support](/docs/how-to-guides/themes/theme-support.md) and [how to filter global styles](/docs/reference-guides/filters/global-styles-filters.md).
 
 ## Autocomplete
 

@@ -8,6 +8,7 @@ import {
 	clickOnMoreMenuItem,
 	createNewPost,
 	deactivatePlugin,
+	canvas,
 } from '@wordpress/e2e-test-utils';
 
 const clickOnBlockSettingsMenuItem = async ( buttonLabel ) => {
@@ -17,7 +18,7 @@ const clickOnBlockSettingsMenuItem = async ( buttonLabel ) => {
 
 const ANNOTATIONS_SELECTOR = '.annotation-text-e2e-tests';
 
-describe( 'Using Plugins API', () => {
+describe( 'Annotations', () => {
 	beforeAll( async () => {
 		await activatePlugin( 'gutenberg-test-plugin-plugins-api' );
 	} );
@@ -49,9 +50,9 @@ describe( 'Using Plugins API', () => {
 		// Click add annotation button.
 		const addAnnotationButton = (
 			await page.$x( "//button[contains(text(), 'Add annotation')]" )
-		 )[ 0 ];
+		)[ 0 ];
 		await addAnnotationButton.click();
-		await page.evaluate( () =>
+		await canvas().evaluate( () =>
 			document.querySelector( '.wp-block-paragraph' ).focus()
 		);
 	}
@@ -65,9 +66,9 @@ describe( 'Using Plugins API', () => {
 		// Click remove annotations button.
 		const addAnnotationButton = (
 			await page.$x( "//button[contains(text(), 'Remove annotations')]" )
-		 )[ 0 ];
+		)[ 0 ];
 		await addAnnotationButton.click();
-		await page.evaluate( () =>
+		await canvas().evaluate( () =>
 			document.querySelector( '[contenteditable]' ).focus()
 		);
 	}
@@ -78,11 +79,11 @@ describe( 'Using Plugins API', () => {
 	 * @return {Promise<string>} The annotated text.
 	 */
 	async function getAnnotatedText() {
-		const annotations = await page.$$( ANNOTATIONS_SELECTOR );
+		const annotations = await canvas().$$( ANNOTATIONS_SELECTOR );
 
 		const annotation = annotations[ 0 ];
 
-		return await page.evaluate( ( el ) => el.innerText, annotation );
+		return await canvas().evaluate( ( el ) => el.innerText, annotation );
 	}
 
 	/**
@@ -91,102 +92,98 @@ describe( 'Using Plugins API', () => {
 	 * @return {Promise<string>} Inner HTML.
 	 */
 	async function getRichTextInnerHTML() {
-		const htmlContent = await page.$$( '.wp-block-paragraph' );
-		return await page.evaluate( ( el ) => {
+		const htmlContent = await canvas().$$( '.wp-block-paragraph' );
+		return await canvas().evaluate( ( el ) => {
 			return el.innerHTML;
 		}, htmlContent[ 0 ] );
 	}
 
-	describe( 'Annotations', () => {
-		it( 'Allows a block to be annotated', async () => {
-			await page.keyboard.type(
-				'Title' + '\n' + 'Paragraph to annotate'
-			);
+	it( 'allows a block to be annotated', async () => {
+		await page.keyboard.type( 'Title' + '\n' + 'Paragraph to annotate' );
 
-			await clickOnMoreMenuItem( 'Annotations Sidebar' );
+		await clickOnMoreMenuItem( 'Annotations' );
 
-			let annotations = await page.$$( ANNOTATIONS_SELECTOR );
-			expect( annotations ).toHaveLength( 0 );
+		let annotations = await canvas().$$( ANNOTATIONS_SELECTOR );
+		expect( annotations ).toHaveLength( 0 );
 
-			await annotateFirstBlock( 9, 13 );
+		await annotateFirstBlock( 9, 13 );
 
-			annotations = await page.$$( ANNOTATIONS_SELECTOR );
-			expect( annotations ).toHaveLength( 1 );
+		annotations = await canvas().$$( ANNOTATIONS_SELECTOR );
+		expect( annotations ).toHaveLength( 1 );
 
-			const text = await getAnnotatedText();
-			expect( text ).toBe( ' to ' );
+		const text = await getAnnotatedText();
+		expect( text ).toBe( ' to ' );
 
-			await clickOnBlockSettingsMenuItem( 'Edit as HTML' );
+		await clickOnBlockSettingsMenuItem( 'Edit as HTML' );
 
-			const htmlContent = await page.$$(
-				'.block-editor-block-list__block-html-textarea'
-			);
-			const html = await page.evaluate( ( el ) => {
-				return el.innerHTML;
-			}, htmlContent[ 0 ] );
+		const htmlContent = await canvas().$$(
+			'.block-editor-block-list__block-html-textarea'
+		);
+		const html = await canvas().evaluate( ( el ) => {
+			return el.innerHTML;
+		}, htmlContent[ 0 ] );
 
-			// There should be no <mark> tags in the raw content.
-			expect( html ).toBe( '&lt;p&gt;Paragraph to annotate&lt;/p&gt;' );
-		} );
+		// There should be no <mark> tags in the raw content.
+		expect( html ).toBe( '&lt;p&gt;Paragraph to annotate&lt;/p&gt;' );
+	} );
 
-		it( 'Keeps the cursor in the same location when applying annotation', async () => {
-			await page.keyboard.type( 'Title' + '\n' + 'ABC' );
-			await clickOnMoreMenuItem( 'Annotations Sidebar' );
+	it( 'keeps the cursor in the same location when applying annotation', async () => {
+		await page.keyboard.type( 'Title' + '\n' + 'ABC' );
+		await clickOnMoreMenuItem( 'Annotations' );
 
-			await annotateFirstBlock( 1, 2 );
+		await annotateFirstBlock( 1, 2 );
 
-			// The selection should still be at the end, so test that by typing:
-			await page.keyboard.type( 'D' );
+		// The selection should still be at the end, so test that by typing:
+		await page.keyboard.type( 'D' );
 
-			await removeAnnotations();
-			const htmlContent = await page.$$( '.wp-block-paragraph' );
-			const html = await page.evaluate( ( el ) => {
-				return el.innerHTML;
-			}, htmlContent[ 0 ] );
+		await removeAnnotations();
+		const htmlContent = await canvas().$$( '.wp-block-paragraph' );
+		const html = await canvas().evaluate( ( el ) => {
+			return el.innerHTML;
+		}, htmlContent[ 0 ] );
 
-			expect( html ).toBe( 'ABCD' );
-		} );
+		expect( html ).toBe( 'ABCD' );
+	} );
 
-		it( 'Moves when typing before it', async () => {
-			await page.keyboard.type( 'Title' + '\n' + 'ABC' );
-			await clickOnMoreMenuItem( 'Annotations Sidebar' );
+	it( 'moves when typing before it', async () => {
+		await page.keyboard.type( 'Title' + '\n' + 'ABC' );
+		await clickOnMoreMenuItem( 'Annotations' );
 
-			await annotateFirstBlock( 1, 2 );
+		await annotateFirstBlock( 1, 2 );
 
-			await page.keyboard.press( 'ArrowLeft' );
-			await page.keyboard.press( 'ArrowLeft' );
-			await page.keyboard.press( 'ArrowLeft' );
-			await page.keyboard.press( 'ArrowLeft' );
+		await page.keyboard.press( 'ArrowLeft' );
+		await page.keyboard.press( 'ArrowLeft' );
+		await page.keyboard.press( 'ArrowLeft' );
+		await page.keyboard.press( 'ArrowLeft' );
 
-			// Put an 1 after the A, it should not be annotated.
-			await page.keyboard.type( '1' );
+		// Put an 1 after the A, it should not be annotated.
+		await page.keyboard.type( '1' );
 
-			const annotatedText = await getAnnotatedText();
-			expect( annotatedText ).toBe( 'B' );
+		const annotatedText = await getAnnotatedText();
+		expect( annotatedText ).toBe( 'B' );
 
-			await removeAnnotations();
-			const blockText = await getRichTextInnerHTML();
-			expect( blockText ).toBe( 'A1BC' );
-		} );
+		await removeAnnotations();
+		const blockText = await getRichTextInnerHTML();
+		expect( blockText ).toBe( 'A1BC' );
+	} );
 
-		it( 'Grows when typing inside it', async () => {
-			await page.keyboard.type( 'Title' + '\n' + 'ABC' );
-			await clickOnMoreMenuItem( 'Annotations Sidebar' );
+	it( 'grows when typing inside it', async () => {
+		await page.keyboard.type( 'Title' + '\n' + 'ABC' );
+		await clickOnMoreMenuItem( 'Annotations' );
 
-			await annotateFirstBlock( 1, 2 );
+		await annotateFirstBlock( 1, 2 );
 
-			await page.keyboard.press( 'ArrowLeft' );
-			await page.keyboard.press( 'ArrowLeft' );
+		await page.keyboard.press( 'ArrowLeft' );
+		await page.keyboard.press( 'ArrowLeft' );
 
-			// Put an 1 after the A, it should not be annotated.
-			await page.keyboard.type( '2' );
+		// Put an 1 after the A, it should not be annotated.
+		await page.keyboard.type( '2' );
 
-			const annotatedText = await getAnnotatedText();
-			expect( annotatedText ).toBe( 'B2' );
+		const annotatedText = await getAnnotatedText();
+		expect( annotatedText ).toBe( 'B2' );
 
-			await removeAnnotations();
-			const blockText = await getRichTextInnerHTML();
-			expect( blockText ).toBe( 'AB2C' );
-		} );
+		await removeAnnotations();
+		const blockText = await getRichTextInnerHTML();
+		expect( blockText ).toBe( 'AB2C' );
 	} );
 } );

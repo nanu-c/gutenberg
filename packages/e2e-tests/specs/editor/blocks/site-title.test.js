@@ -3,43 +3,14 @@
  */
 import {
 	createNewPost,
-	createUser,
-	deleteUser,
+	getOption,
 	insertBlock,
 	loginUser,
 	pressKeyWithModifier,
-	switchUserToAdmin,
-	switchUserToTest,
-	visitAdminPage,
+	setOption,
+	openDocumentSettingsSidebar,
+	canvas,
 } from '@wordpress/e2e-test-utils';
-
-async function getOption( setting ) {
-	await switchUserToAdmin();
-	await visitAdminPage( 'options.php' );
-
-	const value = await page.$eval(
-		`#${ setting }`,
-		( element ) => element.value
-	);
-	await switchUserToTest();
-	return value;
-}
-
-async function setOption( setting, value ) {
-	await switchUserToAdmin();
-	await visitAdminPage( 'options-general.php' );
-
-	await page.focus( `#${ setting }` );
-	await pressKeyWithModifier( 'primary', 'a' );
-	await page.type( `#${ setting }`, value );
-
-	await Promise.all( [
-		page.click( '#submit' ),
-		page.waitForNavigation( { waitUntil: 'networkidle0' } ),
-	] );
-
-	await switchUserToTest();
-}
 
 const saveEntities = async () => {
 	const savePostSelector = '.editor-post-publish-button__button';
@@ -64,11 +35,9 @@ describe( 'Site Title block', () => {
 	const username = 'testuser';
 	beforeAll( async () => {
 		originalSiteTitle = await getOption( 'blogname' );
-		password = await createUser( username, { role: 'editor' } );
 	} );
 
 	afterAll( async () => {
-		await deleteUser( username );
 		await setOption( 'blogname', originalSiteTitle );
 	} );
 
@@ -77,8 +46,8 @@ describe( 'Site Title block', () => {
 		await insertBlock( 'Site Title' );
 		const editableSiteTitleSelector =
 			'[aria-label="Block: Site Title"] a[contenteditable="true"]';
-		await page.waitForSelector( editableSiteTitleSelector );
-		await page.focus( editableSiteTitleSelector );
+		await canvas().waitForSelector( editableSiteTitleSelector );
+		await canvas().focus( editableSiteTitleSelector );
 		await pressKeyWithModifier( 'primary', 'a' );
 
 		await page.keyboard.type( 'New Site Title' );
@@ -99,11 +68,18 @@ describe( 'Site Title block', () => {
 		await createNewPost();
 		await insertBlock( 'Site Title' );
 
-		const editableSiteTitleSelector = '[aria-label="Block: Site Title"] a';
-		await page.waitForSelector( editableSiteTitleSelector );
+		await openDocumentSettingsSidebar();
+
+		const [ disableLink ] = await page.$x(
+			"//label[contains(text(), 'Make title link to home')]"
+		);
+		await disableLink.click();
+
+		const siteTitleSelector = '[aria-label="Block: Site Title"] span';
+		await page.waitForSelector( siteTitleSelector );
 
 		const editable = await page.$eval(
-			editableSiteTitleSelector,
+			siteTitleSelector,
 			( element ) => element.contentEditable
 		);
 		expect( editable ).toBe( 'inherit' );

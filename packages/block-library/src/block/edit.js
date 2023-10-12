@@ -1,69 +1,91 @@
 /**
+ * External dependencies
+ */
+import classnames from 'classnames';
+
+/**
  * WordPress dependencies
  */
-import { useSelect, useDispatch } from '@wordpress/data';
 import {
 	useEntityBlockEditor,
 	useEntityProp,
-	store as coreStore,
+	useEntityRecord,
 } from '@wordpress/core-data';
 import {
 	Placeholder,
 	Spinner,
-	ToolbarGroup,
-	ToolbarButton,
 	TextControl,
 	PanelBody,
 } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import {
-	__experimentalUseInnerBlocksProps as useInnerBlocksProps,
-	__experimentalUseNoRecursiveRenders as useNoRecursiveRenders,
-	__experimentalBlockContentOverlay as BlockContentOverlay,
+	useInnerBlocksProps,
+	__experimentalRecursionProvider as RecursionProvider,
+	__experimentalUseHasRecursion as useHasRecursion,
 	InnerBlocks,
-	BlockControls,
 	InspectorControls,
 	useBlockProps,
 	Warning,
+	privateApis as blockEditorPrivateApis,
 } from '@wordpress/block-editor';
-import { store as reusableBlocksStore } from '@wordpress/reusable-blocks';
-import { ungroup } from '@wordpress/icons';
+import { useRef, useMemo } from '@wordpress/element';
 
-export default function ReusableBlockEdit( { attributes: { ref }, clientId } ) {
-	const [ hasAlreadyRendered, RecursionProvider ] = useNoRecursiveRenders(
+/**
+ * Internal dependencies
+ */
+import { unlock } from '../lock-unlock';
+
+const fullAlignments = [ 'full', 'wide', 'left', 'right' ];
+
+const useInferredLayout = ( blocks, parentLayout ) => {
+	const initialInferredAlignmentRef = useRef();
+
+	return useMemo( () => {
+		// Exit early if the pattern's blocks haven't loaded yet.
+		if ( ! blocks?.length ) {
+			return {};
+		}
+
+		let alignment = initialInferredAlignmentRef.current;
+
+		// Only track the initial alignment so that temporarily removed
+		// alignments can be reapplied.
+		if ( alignment === undefined ) {
+			const isConstrained = parentLayout?.type === 'constrained';
+			const hasFullAlignment = blocks.some( ( block ) =>
+				fullAlignments.includes( block.attributes.align )
+			);
+
+			alignment = isConstrained && hasFullAlignment ? 'full' : null;
+			initialInferredAlignmentRef.current = alignment;
+		}
+
+		const layout = alignment ? parentLayout : undefined;
+
+		return { alignment, layout };
+	}, [ blocks, parentLayout ] );
+};
+
+export default function ReusableBlockEdit( {
+	name,
+	attributes: { ref },
+	__unstableParentLayout: parentLayout,
+} ) {
+	const { useLayoutClasses } = unlock( blockEditorPrivateApis );
+	const hasAlreadyRendered = useHasRecursion( ref );
+	const { record, hasResolved } = useEntityRecord(
+		'postType',
+		'wp_block',
 		ref
 	);
-	const { isMissing, hasResolved } = useSelect(
-		( select ) => {
-			const persistedBlock = select( coreStore ).getEntityRecord(
-				'postType',
-				'wp_block',
-				ref
-			);
-			const hasResolvedBlock = select(
-				coreStore
-			).hasFinishedResolution( 'getEntityRecord', [
-				'postType',
-				'wp_block',
-				ref,
-			] );
-			return {
-				hasResolved: hasResolvedBlock,
-				isMissing: hasResolvedBlock && ! persistedBlock,
-			};
-		},
-		[ ref, clientId ]
-	);
-
-	const {
-		__experimentalConvertBlockToStatic: convertBlockToStatic,
-	} = useDispatch( reusableBlocksStore );
+	const isMissing = hasResolved && ! record;
 
 	const [ blocks, onInput, onChange ] = useEntityBlockEditor(
 		'postType',
 		'wp_block',
 		{ id: ref }
 	);
+
 	const [ title, setTitle ] = useEntityProp(
 		'postType',
 		'wp_block',
@@ -71,19 +93,26 @@ export default function ReusableBlockEdit( { attributes: { ref }, clientId } ) {
 		ref
 	);
 
-	const blockProps = useBlockProps();
+	const { alignment, layout } = useInferredLayout( blocks, parentLayout );
+	const layoutClasses = useLayoutClasses( { layout }, name );
 
-	const innerBlocksProps = useInnerBlocksProps(
-		{},
-		{
-			value: blocks,
-			onInput,
-			onChange,
-			renderAppender: blocks?.length
-				? undefined
-				: InnerBlocks.ButtonBlockAppender,
-		}
-	);
+	const blockProps = useBlockProps( {
+		className: classnames(
+			'block-library-block__reusable-block-container',
+			layout && layoutClasses,
+			{ [ `align${ alignment }` ]: alignment }
+		),
+	} );
+
+	const innerBlocksProps = useInnerBlocksProps( blockProps, {
+		value: blocks,
+		layout,
+		onInput,
+		onChange,
+		renderAppender: blocks?.length
+			? undefined
+			: InnerBlocks.ButtonBlockAppender,
+	} );
 
 	if ( hasAlreadyRendered ) {
 		return (
@@ -116,33 +145,18 @@ export default function ReusableBlockEdit( { attributes: { ref }, clientId } ) {
 	}
 
 	return (
-		<RecursionProvider>
-			<div { ...blockProps }>
-				<BlockControls>
-					<ToolbarGroup>
-						<ToolbarButton
-							onClick={ () => convertBlockToStatic( clientId ) }
-							label={ __( 'Convert to regular blocks' ) }
-							icon={ ungroup }
-							showTooltip
-						/>
-					</ToolbarGroup>
-				</BlockControls>
-				<InspectorControls>
-					<PanelBody>
-						<TextControl
-							label={ __( 'Name' ) }
-							value={ title }
-							onChange={ setTitle }
-						/>
-					</PanelBody>
-				</InspectorControls>
-				<BlockContentOverlay
-					clientId={ clientId }
-					wrapperProps={ innerBlocksProps }
-					className="block-library-block__reusable-block-container"
-				/>
-			</div>
+		<RecursionProvider uniqueId={ ref }>
+			<InspectorControls>
+				<PanelBody>
+					<TextControl
+						__nextHasNoMarginBottom
+						label={ __( 'Name' ) }
+						value={ title }
+						onChange={ setTitle }
+					/>
+				</PanelBody>
+			</InspectorControls>
+			<div { ...innerBlocksProps } />
 		</RecursionProvider>
 	);
 }

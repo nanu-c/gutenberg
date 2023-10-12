@@ -56,8 +56,8 @@ If only a few child checkboxes are checked, the parent checkbox becomes a mixed 
 Render an is author checkbox:
 
 ```jsx
+import { useState } from 'react';
 import { CheckboxControl } from '@wordpress/components';
-import { useState } from '@wordpress/element';
 
 const MyCheckboxControl = () => {
 	const [ isChecked, setChecked ] = useState( true );
@@ -77,36 +77,38 @@ const MyCheckboxControl = () => {
 The set of props accepted by the component will be specified below.
 Props not included in this set will be applied to the input element.
 
-#### label
+#### `label`: `string`
 
 A label for the input field, that appears at the side of the checkbox.
 The prop will be rendered as content a label element.
 If no prop is passed an empty label is rendered.
 
--   Type: `String`
 -   Required: No
 
-#### help
+#### `help`: `string|Element`
 
 If this property is added, a help text will be generated using help property as the content.
 
--   Type: `String|WPElement`
 -   Required: No
 
-#### checked
+#### `checked`: `boolean`
 
 If checked is true the checkbox will be checked. If checked is false the checkbox will be unchecked.
 If no value is passed the checkbox will be unchecked.
 
--   Type: `Boolean`
 -   Required: No
 
-#### onChange
+#### `onChange`: `function`
 
 A function that receives the checked state (boolean) as input.
 
--   Type: `function`
 -   Required: Yes
+
+#### `indeterminate`: `boolean`
+
+If indeterminate is true the state of the checkbox will be indeterminate.
+
+-   Required: No
 
 ## Related components
 

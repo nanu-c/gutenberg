@@ -1,6 +1,10 @@
 # RadioGroup
 
 <div class="callout callout-alert">
+This component is deprecated. Consider using `RadioControl` or `ToggleGroupControl` instead.
+</div>
+
+<div class="callout callout-alert">
 This feature is still experimental. “Experimental” means this is an early implementation subject to drastic and breaking changes.
 </div>
 
@@ -49,8 +53,11 @@ Radio groups that cannot be selected can either be given a disabled state, or be
 #### Controlled
 
 ```jsx
-import { Radio, RadioGroup } from '@wordpress/components';
-import { useState } from '@wordpress/element';
+import { useState } from 'react';
+import {
+	__experimentalRadio as Radio,
+	__experimentalRadioGroup as RadioGroup,
+} from '@wordpress/components';
 
 const MyControlledRadioRadioGroup = () => {
 	const [ checked, setChecked ] = useState( '25' );
@@ -70,11 +77,11 @@ const MyControlledRadioRadioGroup = () => {
 When using the RadioGroup component as an uncontrolled component, the default value can be set with the `defaultChecked` prop.
 
 ```jsx
+import { useState } from 'react';
 import {
 	__experimentalRadio as Radio,
 	__experimentalRadioGroup as RadioGroup,
 } from '@wordpress/components';
-import { useState } from '@wordpress/element';
 
 const MyUncontrolledRadioRadioGroup = () => {
 	return (

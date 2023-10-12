@@ -2,6 +2,93 @@
 
 ## Unreleased
 
+## 7.27.0 (2023-10-05)
+
+### Internal
+
+-   The bundled `browserslist` dependency has been updated from requiring `^4.21.9` to requiring `^4.21.10` ([#54657](https://github.com/WordPress/gutenberg/pull/54657)).
+
+## Enhancements
+
+-   Use `react` as the default scope variable for JSX pragma instead of `@wordpress/element`.
+
+## 7.26.0 (2023-09-20)
+
+## 7.25.0 (2023-08-31)
+
+## 7.24.0 (2023-08-16)
+
+## 7.23.0 (2023-08-10)
+
+## 7.22.0 (2023-07-20)
+
+## 7.21.0 (2023-07-05)
+
+## 7.20.0 (2023-06-23)
+
+## 7.19.0 (2023-06-07)
+
+### Enhancement
+
+-   Enable the `bugfixes` option in `@babel/preset-env` to remove unneeded transpilation ([#50994](https://github.com/WordPress/gutenberg/pull/50994)).
+
+## 7.18.0 (2023-05-24)
+
+## 7.17.0 (2023-05-10)
+
+## 7.16.0 (2023-04-26)
+
+## 7.15.0 (2023-04-12)
+
+## 7.14.0 (2023-03-29)
+
+### Enhancement
+
+-   Exclude IE-only `setImmediate`/`clearImmediate` from list of polyfills.
+
+## 7.13.0 (2023-03-15)
+
+## 7.12.0 (2023-03-01)
+
+## 7.11.0 (2023-02-15)
+
+## 7.10.0 (2023-02-01)
+
+## 7.9.0 (2023-01-11)
+
+## 7.8.0 (2023-01-02)
+
+## 7.7.0 (2022-12-14)
+
+## 7.6.0 (2022-11-16)
+
+## 7.5.0 (2022-11-02)
+
+## 7.4.0 (2022-10-19)
+
+## 7.3.0 (2022-10-05)
+
+## 7.2.0 (2022-09-21)
+
+## 7.0.0 (2022-08-24)
+
+### Breaking Change
+
+-   Increase the minimum Node.js version to 14 ([#43141](https://github.com/WordPress/gutenberg/pull/43141)).
+
+## 6.4.0 (2021-11-15)
+
+### Enhancements
+
+-   The bundled `@babel/core` dependency has been updated from requiring `^7.13.19` to requiring `^7.16.0` ([#36244](https://github.com/WordPress/gutenberg/pull/36244)).
+-   The bundled `@babel/plugin-transform-react-jsx` dependency has been updated from requiring `^7.12.7` to requiring `^7.16.0` ([#36244](https://github.com/WordPress/gutenberg/pull/36244)).
+-   The bundled `@babel/plugin-transform-runtime` dependency has been updated from requiring `^7.13.10` to requiring `^7.16.0` ([#36244](https://github.com/WordPress/gutenberg/pull/36244)).
+-   The bundled `@babel/preset-env` dependency has been updated from requiring `^7.13.10` to requiring `^7.16.0` ([#36244](https://github.com/WordPress/gutenberg/pull/36244)).
+-   The bundled `@babel/preset-typescript` dependency has been updated from requiring `^7.13.10` to requiring `^7.16.0` ([#36244](https://github.com/WordPress/gutenberg/pull/36244)).
+-   The bundled `@babel/runtime` dependency has been updated from requiring `^7.13.10` to requiring `^7.16.0` ([#36244](https://github.com/WordPress/gutenberg/pull/36244)).
+-   The bundled `browserslist` dependency has been updated from requiring `^4.16.6` to requiring `^4.17.6` ([#36244](https://github.com/WordPress/gutenberg/pull/36244)).
+-   The bundled `core-js` dependency has been updated from requiring `^3.12.1` to requiring `^3.19.1` ([#36244](https://github.com/WordPress/gutenberg/pull/36244)).
+
 ## 6.2.0 (2021-05-31)
 
 ### New Feature

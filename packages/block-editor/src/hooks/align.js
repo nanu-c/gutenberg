@@ -2,7 +2,6 @@
  * External dependencies
  */
 import classnames from 'classnames';
-import { has, without } from 'lodash';
 
 /**
  * WordPress dependencies
@@ -20,6 +19,7 @@ import {
  */
 import { BlockControls, BlockAlignmentControl } from '../components';
 import useAvailableAlignments from '../components/block-alignment-control/use-available-alignments';
+import { useBlockEditingMode } from '../components/block-editing-mode';
 
 /**
  * An array which includes all possible valid alignments,
@@ -63,7 +63,7 @@ export function getValidAlignments(
 		);
 	} else if ( blockAlign === true ) {
 		// `true` includes all alignments...
-		validAlignments = ALL_ALIGNMENTS;
+		validAlignments = [ ...ALL_ALIGNMENTS ];
 	} else {
 		validAlignments = [];
 	}
@@ -72,7 +72,9 @@ export function getValidAlignments(
 		! hasWideEnabled ||
 		( blockAlign === true && ! hasWideBlockSupport )
 	) {
-		return without( validAlignments, ...WIDE_ALIGNMENTS );
+		return validAlignments.filter(
+			( alignment ) => ! WIDE_ALIGNMENTS.includes( alignment )
+		);
 	}
 
 	return validAlignments;
@@ -86,8 +88,8 @@ export function getValidAlignments(
  * @return {Object} Filtered block settings.
  */
 export function addAttribute( settings ) {
-	// allow blocks to specify their own attribute definition with default values if needed.
-	if ( has( settings.attributes, [ 'align', 'type' ] ) ) {
+	// Allow blocks to specify their own attribute definition with default values if needed.
+	if ( 'type' in ( settings.attributes?.align ?? {} ) ) {
 		return settings;
 	}
 	if ( hasBlockSupport( settings, 'align' ) ) {
@@ -116,15 +118,24 @@ export function addAttribute( settings ) {
  */
 export const withToolbarControls = createHigherOrderComponent(
 	( BlockEdit ) => ( props ) => {
+		const blockEdit = <BlockEdit key="edit" { ...props } />;
 		const { name: blockName } = props;
-		// Compute the block allowed alignments without taking into account,
-		// if the theme supports wide alignments or not
-		// and without checking the layout for availble alignments.
-		// BlockAlignmentToolbar takes both of these into account.
+		// Compute the block valid alignments by taking into account,
+		// if the theme supports wide alignments or not and the layout's
+		// availble alignments. We do that for conditionally rendering
+		// Slot.
 		const blockAllowedAlignments = getValidAlignments(
 			getBlockSupport( blockName, 'align' ),
 			hasBlockSupport( blockName, 'alignWide', true )
 		);
+
+		const validAlignments = useAvailableAlignments(
+			blockAllowedAlignments
+		).map( ( { name } ) => name );
+		const blockEditingMode = useBlockEditingMode();
+		if ( ! validAlignments.length || blockEditingMode !== 'default' ) {
+			return blockEdit;
+		}
 
 		const updateAlignment = ( nextAlign ) => {
 			if ( ! nextAlign ) {
@@ -139,19 +150,14 @@ export const withToolbarControls = createHigherOrderComponent(
 
 		return (
 			<>
-				{ blockAllowedAlignments.length > 0 && (
-					<BlockControls
-						group="block"
-						__experimentalShareWithChildBlocks
-					>
-						<BlockAlignmentControl
-							value={ props.attributes.align }
-							onChange={ updateAlignment }
-							controls={ blockAllowedAlignments }
-						/>
-					</BlockControls>
-				) }
-				<BlockEdit { ...props } />
+				<BlockControls group="block" __experimentalShareWithChildBlocks>
+					<BlockAlignmentControl
+						value={ props.attributes.align }
+						onChange={ updateAlignment }
+						controls={ validAlignments }
+					/>
+				</BlockControls>
+				{ blockEdit }
 			</>
 		);
 	},
@@ -184,12 +190,15 @@ export const withDataAlign = createHigherOrderComponent(
 		}
 
 		let wrapperProps = props.wrapperProps;
-		if ( validAlignments.includes( align ) ) {
+		if (
+			validAlignments.some( ( alignment ) => alignment.name === align )
+		) {
 			wrapperProps = { ...wrapperProps, 'data-align': align };
 		}
 
 		return <BlockListBlock { ...props } wrapperProps={ wrapperProps } />;
-	}
+	},
+	'withDataAlign'
 );
 
 /**

@@ -12,10 +12,6 @@
 	padding-right: $grid-unit-10;
 	display: flex;
 	justify-content: flex-end;
-
-	@include break-medium() {
-		display: none;
-	}
 }
 
 .edit-widgets-layout__inserter-panel-content {
@@ -25,4 +21,16 @@
 	@include break-medium() {
 		height: 100%;
 	}
+}
+
+.blocks-widgets-container {
+	// making the header be lower than the content
+	// so the fixed toolbar can be positioned on top of it
+	// but only on desktop
+	@include break-medium() {
+		.interface-interface-skeleton__header:not(:focus-within) {
+			z-index: 19;
+		}
+	}
+
 }

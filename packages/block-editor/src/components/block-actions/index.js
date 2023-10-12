@@ -1,9 +1,4 @@
 /**
- * External dependencies
- */
-import { castArray, first, last, every } from 'lodash';
-
-/**
  * WordPress dependencies
  */
 import { useDispatch, useSelect } from '@wordpress/data';
@@ -16,7 +11,8 @@ import {
 /**
  * Internal dependencies
  */
-import { useNotifyCopy } from '../copy-handler';
+import { useNotifyCopy } from '../../utils/use-notify-copy';
+import usePasteStyles from '../use-paste-styles';
 import { store as blockEditorStore } from '../../store';
 
 export default function BlockActions( {
@@ -28,17 +24,24 @@ export default function BlockActions( {
 		canInsertBlockType,
 		getBlockRootClientId,
 		getBlocksByClientId,
+		canMoveBlocks,
 		canRemoveBlocks,
-		getTemplateLock,
-	} = useSelect( ( select ) => select( blockEditorStore ), [] );
-	const { getDefaultBlockName, getGroupingBlockName } = useSelect(
-		( select ) => select( blocksStore ),
-		[]
-	);
+	} = useSelect( blockEditorStore );
+	const { getDefaultBlockName, getGroupingBlockName } =
+		useSelect( blocksStore );
 
 	const blocks = getBlocksByClientId( clientIds );
 	const rootClientId = getBlockRootClientId( clientIds[ 0 ] );
-	const canDuplicate = every( blocks, ( block ) => {
+
+	const canCopyStyles = blocks.every( ( block ) => {
+		return (
+			!! block &&
+			( hasBlockSupport( block.name, 'color' ) ||
+				hasBlockSupport( block.name, 'typography' ) )
+		);
+	} );
+
+	const canDuplicate = blocks.every( ( block ) => {
 		return (
 			!! block &&
 			hasBlockSupport( block.name, 'multiple', true ) &&
@@ -51,6 +54,7 @@ export default function BlockActions( {
 		rootClientId
 	);
 
+	const canMove = canMoveBlocks( clientIds, rootClientId );
 	const canRemove = canRemoveBlocks( clientIds, rootClientId );
 
 	const {
@@ -66,12 +70,14 @@ export default function BlockActions( {
 	} = useDispatch( blockEditorStore );
 
 	const notifyCopy = useNotifyCopy();
+	const pasteStyles = usePasteStyles();
 
 	return children( {
+		canCopyStyles,
 		canDuplicate,
 		canInsertDefaultBlock,
+		canMove,
 		canRemove,
-		isLocked: !! getTemplateLock( rootClientId ),
 		rootClientId,
 		blocks,
 		onDuplicate() {
@@ -81,10 +87,16 @@ export default function BlockActions( {
 			return removeBlocks( clientIds, updateSelection );
 		},
 		onInsertBefore() {
-			insertBeforeBlock( first( castArray( clientIds ) ) );
+			const clientId = Array.isArray( clientIds )
+				? clientIds[ 0 ]
+				: clientId;
+			insertBeforeBlock( clientId );
 		},
 		onInsertAfter() {
-			insertAfterBlock( last( castArray( clientIds ) ) );
+			const clientId = Array.isArray( clientIds )
+				? clientIds[ clientIds.length - 1 ]
+				: clientId;
+			insertAfterBlock( clientId );
 		},
 		onMoveTo() {
 			setNavigationMode( true );
@@ -98,7 +110,7 @@ export default function BlockActions( {
 
 			const groupingBlockName = getGroupingBlockName();
 
-			// Activate the `transform` on `core/group` which does the conversion
+			// Activate the `transform` on `core/group` which does the conversion.
 			const newBlocks = switchToBlockType( blocks, groupingBlockName );
 
 			if ( ! newBlocks ) {
@@ -127,6 +139,9 @@ export default function BlockActions( {
 				flashBlock( selectedBlockClientIds[ 0 ] );
 			}
 			notifyCopy( 'copy', selectedBlockClientIds );
+		},
+		async onPasteStyles() {
+			await pasteStyles( blocks );
 		},
 	} );
 }

@@ -8,7 +8,8 @@ import { View } from 'react-native';
  */
 import { PlainText } from '@wordpress/block-editor';
 import { __ } from '@wordpress/i18n';
-import { withPreferredColorScheme } from '@wordpress/compose';
+import { usePreferredColorSchemeStyle } from '@wordpress/compose';
+import { createBlock, getDefaultBlockName } from '@wordpress/blocks';
 
 /**
  * Internal dependencies
@@ -27,13 +28,19 @@ export function CodeEdit( props ) {
 		setAttributes,
 		onFocus,
 		onBlur,
-		getStylesFromColorScheme,
+		style,
+		insertBlocksAfter,
+		mergeBlocks,
 	} = props;
-	const codeStyle = getStylesFromColorScheme(
-		styles.blockCode,
-		styles.blockCodeDark
-	);
-	const placeholderStyle = getStylesFromColorScheme(
+	const codeStyle = {
+		...usePreferredColorSchemeStyle(
+			styles.blockCode,
+			styles.blockCodeDark
+		),
+		...( style?.fontSize && { fontSize: style.fontSize } ),
+	};
+
+	const placeholderStyle = usePreferredColorSchemeStyle(
 		styles.placeholder,
 		styles.placeholderDark
 	);
@@ -42,19 +49,24 @@ export function CodeEdit( props ) {
 		<View>
 			<PlainText
 				value={ attributes.content }
+				identifier="content"
 				style={ codeStyle }
 				multiline={ true }
 				underlineColorAndroid="transparent"
 				onChange={ ( content ) => setAttributes( { content } ) }
+				onMerge={ mergeBlocks }
 				placeholder={ __( 'Write code…' ) }
 				aria-label={ __( 'Code' ) }
 				isSelected={ props.isSelected }
 				onFocus={ onFocus }
 				onBlur={ onBlur }
 				placeholderTextColor={ placeholderStyle.color }
+				__unstableOnSplitAtDoubleLineEnd={ () =>
+					insertBlocksAfter( createBlock( getDefaultBlockName() ) )
+				}
 			/>
 		</View>
 	);
 }
 
-export default withPreferredColorScheme( CodeEdit );
+export default CodeEdit;
