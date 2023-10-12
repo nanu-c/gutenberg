@@ -199,8 +199,9 @@ test.describe( 'Post title', () => {
 			} );
 
 			pageUtils.setClipboardData( {
-				plainText: 'hello plain',
-				html: 'hello html',
+				plainText:
+					'I am <em>emphasis</em> I am <strong>bold</strong> I am <a href="#">anchor</a>',
+				html: 'I am <em>emphasis</em> I am <strong>bold</strong> I am <a href="#">anchor</a>',
 			} );
 
 			// focus on the title field
