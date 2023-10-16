@@ -62,7 +62,7 @@ function PostTitleRaw( _, forwardedRef ) {
 
 	return (
 		<TextareaControl
-			ref={ focusRef }
+			// ref={ focusRef }
 			value={ title }
 			onChange={ onChange }
 			onFocus={ onSelect }
