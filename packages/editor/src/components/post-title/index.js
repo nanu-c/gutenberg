@@ -22,7 +22,6 @@ import usePostTitleFocus from './use-post-title-focus';
 import usePostTitle from './use-post-title';
 
 function PostTitle( _, forwardedRef ) {
-	// const { editPost } = useDispatch( editorStore );
 	const { placeholder, hasFixedToolbar } = useSelect( ( select ) => {
 		const { getEditedPostAttribute } = select( editorStore );
 		const { getSettings } = select( blockEditorStore );
