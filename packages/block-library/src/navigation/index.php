@@ -592,7 +592,7 @@ function render_block_core_navigation( $attributes, $content, $block ) {
 	foreach ( $inner_blocks as $inner_block ) {
 		$inner_block_content = $inner_block->render();
 		$p                   = new WP_HTML_Tag_Processor( $inner_block_content );
-		$is_list_item        = $p->next_tag( 'LI' );
+		$is_list_item        = $p->next_tag( 'LI' ) || in_array( $inner_block->name, $needs_list_item_wrapper, true );
 
 		if ( $is_list_item && ! $is_list_open ) {
 			$is_list_open       = true;
