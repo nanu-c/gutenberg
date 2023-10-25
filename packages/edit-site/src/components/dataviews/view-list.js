@@ -18,7 +18,6 @@ import {
 	chevronDown,
 	chevronUp,
 	unseen,
-	check,
 	arrowUp,
 	arrowDown,
 } from '@wordpress/icons';
@@ -37,10 +36,11 @@ import { unlock } from '../../lock-unlock';
 import ItemActions from './item-actions';
 
 const {
-	DropdownMenuV2,
-	DropdownMenuGroupV2,
-	DropdownMenuItemV2,
-	DropdownMenuSeparatorV2,
+	DropdownMenuV2Ariakit,
+	DropdownMenuGroupV2Ariakit,
+	DropdownMenuItemV2Ariakit,
+	DropdownMenuRadioItemV2Ariakit,
+	DropdownMenuSeparatorV2Ariakit,
 } = unlock( componentsPrivateApis );
 
 const EMPTY_OBJECT = {};
@@ -64,8 +64,8 @@ function HeaderMenu( { dataView, header } ) {
 	}
 	const sortedDirection = header.column.getIsSorted();
 	return (
-		<DropdownMenuV2
-			align="start"
+		<DropdownMenuV2Ariakit
+			placement="bottom-start"
 			trigger={
 				<Button
 					icon={ sortIcons[ header.column.getIsSorted() ] }
@@ -77,19 +77,19 @@ function HeaderMenu( { dataView, header } ) {
 		>
 			<WithSeparators>
 				{ isSortable && (
-					<DropdownMenuGroupV2>
+					<DropdownMenuGroupV2Ariakit>
 						{ Object.entries( sortingItemsInfo ).map(
 							( [ direction, info ] ) => (
-								<DropdownMenuItemV2
+								<DropdownMenuRadioItemV2Ariakit
 									key={ direction }
-									prefix={ <Icon icon={ info.icon } /> }
-									suffix={
-										sortedDirection === direction && (
-											<Icon icon={ check } />
-										)
-									}
-									onSelect={ ( event ) => {
-										event.preventDefault();
+									value={ direction }
+									name="view-list-column-sorting"
+									// Note: there is currently a limitation from the DropdownMenu
+									// component where the radio won't unselect when all related
+									// radios are set to false.
+									checked={ sortedDirection === direction }
+									suffix={ <Icon icon={ info.icon } /> }
+									onChange={ () => {
 										if ( sortedDirection === direction ) {
 											dataView.resetSorting();
 										} else {
@@ -103,24 +103,25 @@ function HeaderMenu( { dataView, header } ) {
 									} }
 								>
 									{ info.label }
-								</DropdownMenuItemV2>
+								</DropdownMenuRadioItemV2Ariakit>
 							)
 						) }
-					</DropdownMenuGroupV2>
+					</DropdownMenuGroupV2Ariakit>
 				) }
 				{ isHidable && (
-					<DropdownMenuItemV2
+					<DropdownMenuItemV2Ariakit
 						prefix={ <Icon icon={ unseen } /> }
-						onSelect={ ( event ) => {
-							event.preventDefault();
+						onClick={ ( event ) => {
+							// what was this needed for?
+							// event.preventDefault();
 							header.column.getToggleVisibilityHandler()( event );
 						} }
 					>
 						{ __( 'Hide' ) }
-					</DropdownMenuItemV2>
+					</DropdownMenuItemV2Ariakit>
 				) }
 			</WithSeparators>
-		</DropdownMenuV2>
+		</DropdownMenuV2Ariakit>
 	);
 }
 
@@ -129,7 +130,7 @@ function WithSeparators( { children } ) {
 		.filter( Boolean )
 		.map( ( child, i ) => (
 			<Fragment key={ i }>
-				{ i > 0 && <DropdownMenuSeparatorV2 /> }
+				{ i > 0 && <DropdownMenuSeparatorV2Ariakit /> }
 				{ child }
 			</Fragment>
 		) );
