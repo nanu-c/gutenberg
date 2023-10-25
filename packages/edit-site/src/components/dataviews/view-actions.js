@@ -8,7 +8,6 @@ import {
 } from '@wordpress/components';
 import {
 	chevronRightSmall,
-	check,
 	blockTable,
 	chevronDown,
 	arrowUp,
@@ -22,11 +21,11 @@ import { __ } from '@wordpress/i18n';
 import { unlock } from '../../lock-unlock';
 
 const {
-	DropdownMenuV2,
-	DropdownMenuGroupV2,
-	DropdownMenuItemV2,
-	DropdownSubMenuV2,
-	DropdownSubMenuTriggerV2,
+	DropdownMenuV2Ariakit,
+	DropdownMenuGroupV2Ariakit,
+	DropdownMenuItemV2Ariakit,
+	DropdownMenuRadioItemV2Ariakit,
+	DropdownMenuCheckboxItemV2Ariakit,
 } = unlock( componentsPrivateApis );
 
 const availableViews = [
@@ -43,9 +42,9 @@ const availableViews = [
 function ViewTypeMenu( { view, onChangeView } ) {
 	const activeView = availableViews.find( ( v ) => view.type === v.id );
 	return (
-		<DropdownSubMenuV2
+		<DropdownMenuV2Ariakit
 			trigger={
-				<DropdownSubMenuTriggerV2
+				<DropdownMenuItemV2Ariakit
 					suffix={
 						<>
 							{ activeView.label }
@@ -54,40 +53,34 @@ function ViewTypeMenu( { view, onChangeView } ) {
 					}
 				>
 					{ __( 'Layout' ) }
-				</DropdownSubMenuTriggerV2>
+				</DropdownMenuItemV2Ariakit>
 			}
 		>
 			{ availableViews.map( ( availableView ) => {
 				return (
-					<DropdownMenuItemV2
+					<DropdownMenuRadioItemV2Ariakit
 						key={ availableView.id }
-						prefix={
-							availableView.id === view.type && (
-								<Icon icon={ check } />
-							)
-						}
-						onSelect={ ( event ) => {
-							// We need to handle this on DropDown component probably..
-							event.preventDefault();
+						value={ availableView.id }
+						name="view-actions-available-view"
+						checked={ availableView.id === view.type }
+						onChange={ () => {
 							onChangeView( { ...view, type: availableView.id } );
 						} }
-						// TODO: check about role and a11y.
-						role="menuitemcheckbox"
 					>
 						{ availableView.label }
-					</DropdownMenuItemV2>
+					</DropdownMenuRadioItemV2Ariakit>
 				);
 			} ) }
-		</DropdownSubMenuV2>
+		</DropdownMenuV2Ariakit>
 	);
 }
 
 const PAGE_SIZE_VALUES = [ 5, 20, 50 ];
 function PageSizeMenu( { view, onChangeView } ) {
 	return (
-		<DropdownSubMenuV2
+		<DropdownMenuV2Ariakit
 			trigger={
-				<DropdownSubMenuTriggerV2
+				<DropdownMenuItemV2Ariakit
 					suffix={
 						<>
 							{ view.perPage }
@@ -97,29 +90,25 @@ function PageSizeMenu( { view, onChangeView } ) {
 				>
 					{ /* TODO: probably label per view type. */ }
 					{ __( 'Rows per page' ) }
-				</DropdownSubMenuTriggerV2>
+				</DropdownMenuItemV2Ariakit>
 			}
 		>
 			{ PAGE_SIZE_VALUES.map( ( size ) => {
 				return (
-					<DropdownMenuItemV2
+					<DropdownMenuRadioItemV2Ariakit
 						key={ size }
-						prefix={
-							view.perPage === size && <Icon icon={ check } />
-						}
-						onSelect={ ( event ) => {
-							// We need to handle this on DropDown component probably..
-							event.preventDefault();
+						value={ size }
+						name="view-actions-page-size"
+						checked={ view.perPage === size }
+						onChange={ () => {
 							onChangeView( { ...view, perPage: size, page: 1 } );
 						} }
-						// TODO: check about role and a11y.
-						role="menuitemcheckbox"
 					>
 						{ size }
-					</DropdownMenuItemV2>
+					</DropdownMenuRadioItemV2Ariakit>
 				);
 			} ) }
-		</DropdownSubMenuV2>
+		</DropdownMenuV2Ariakit>
 	);
 }
 
@@ -131,26 +120,22 @@ function FieldsVisibilityMenu( { view, onChangeView, fields } ) {
 		return null;
 	}
 	return (
-		<DropdownSubMenuV2
+		<DropdownMenuV2Ariakit
 			trigger={
-				<DropdownSubMenuTriggerV2
+				<DropdownMenuItemV2Ariakit
 					suffix={ <Icon icon={ chevronRightSmall } /> }
 				>
 					{ __( 'Fields' ) }
-				</DropdownSubMenuTriggerV2>
+				</DropdownMenuItemV2Ariakit>
 			}
 		>
 			{ hidableFields?.map( ( field ) => {
 				return (
-					<DropdownMenuItemV2
+					<DropdownMenuCheckboxItemV2Ariakit
 						key={ field.id }
-						prefix={
-							! view.hiddenFields?.includes( field.id ) && (
-								<Icon icon={ check } />
-							)
-						}
-						onSelect={ ( event ) => {
-							event.preventDefault();
+						value={ field.id }
+						checked={ ! view.hiddenFields?.includes( field.id ) }
+						onChange={ () => {
 							onChangeView( {
 								...view,
 								hiddenFields: view.hiddenFields?.includes(
@@ -162,13 +147,12 @@ function FieldsVisibilityMenu( { view, onChangeView, fields } ) {
 									: [ ...view.hiddenFields, field.id ],
 							} );
 						} }
-						role="menuitemcheckbox"
 					>
 						{ field.header }
-					</DropdownMenuItemV2>
+					</DropdownMenuCheckboxItemV2Ariakit>
 				);
 			} ) }
-		</DropdownSubMenuV2>
+		</DropdownMenuV2Ariakit>
 	);
 }
 
@@ -188,9 +172,9 @@ function SortMenu( { fields, view, onChangeView } ) {
 		( field ) => field.id === view.sort?.field
 	);
 	return (
-		<DropdownSubMenuV2
+		<DropdownMenuV2Ariakit
 			trigger={
-				<DropdownSubMenuTriggerV2
+				<DropdownMenuItemV2Ariakit
 					suffix={
 						<>
 							{ currentSortedField?.header }
@@ -199,38 +183,41 @@ function SortMenu( { fields, view, onChangeView } ) {
 					}
 				>
 					{ __( 'Sort by' ) }
-				</DropdownSubMenuTriggerV2>
+				</DropdownMenuItemV2Ariakit>
 			}
 		>
 			{ sortableFields?.map( ( field ) => {
 				const sortedDirection = view.sort?.direction;
 				return (
-					<DropdownSubMenuV2
+					<DropdownMenuV2Ariakit
 						key={ field.id }
 						trigger={
-							<DropdownSubMenuTriggerV2
+							<DropdownMenuItemV2Ariakit
 								suffix={ <Icon icon={ chevronRightSmall } /> }
 							>
 								{ field.header }
-							</DropdownSubMenuTriggerV2>
+							</DropdownMenuItemV2Ariakit>
 						}
-						side="left"
+						placement="left-start"
 					>
 						{ Object.entries( sortingItemsInfo ).map(
 							( [ direction, info ] ) => {
-								const isActive =
-									currentSortedField &&
+								const isChecked =
+									currentSortedField !== undefined &&
 									sortedDirection === direction &&
 									field.id === currentSortedField.id;
+
 								return (
-									<DropdownMenuItemV2
+									<DropdownMenuRadioItemV2Ariakit
 										key={ direction }
-										prefix={ <Icon icon={ info.icon } /> }
-										suffix={
-											isActive && <Icon icon={ check } />
-										}
-										onSelect={ ( event ) => {
-											event.preventDefault();
+										value={ direction }
+										name={ `view-actions-sorting-${ field.id }` }
+										suffix={ <Icon icon={ info.icon } /> }
+										// Note: there is currently a limitation from the DropdownMenu
+										// component where the radio won't unselect when all related
+										// radios are set to false.
+										checked={ isChecked }
+										onChange={ () => {
 											if (
 												sortedDirection === direction
 											) {
@@ -250,29 +237,32 @@ function SortMenu( { fields, view, onChangeView } ) {
 										} }
 									>
 										{ info.label }
-									</DropdownMenuItemV2>
+									</DropdownMenuRadioItemV2Ariakit>
 								);
 							}
 						) }
-					</DropdownSubMenuV2>
+					</DropdownMenuV2Ariakit>
 				);
 			} ) }
-		</DropdownSubMenuV2>
+		</DropdownMenuV2Ariakit>
 	);
 }
 
 export default function ViewActions( { fields, view, onChangeView } ) {
 	return (
-		<DropdownMenuV2
-			label={ __( 'Actions' ) }
+		<DropdownMenuV2Ariakit
 			trigger={
-				<Button variant="tertiary" icon={ blockTable }>
+				<Button
+					variant="tertiary"
+					icon={ blockTable }
+					label={ __( 'Actions' ) }
+				>
 					{ __( 'View' ) }
 					<Icon icon={ chevronDown } />
 				</Button>
 			}
 		>
-			<DropdownMenuGroupV2>
+			<DropdownMenuGroupV2Ariakit>
 				<ViewTypeMenu view={ view } onChangeView={ onChangeView } />
 				<SortMenu
 					fields={ fields }
@@ -285,7 +275,7 @@ export default function ViewActions( { fields, view, onChangeView } ) {
 					onChangeView={ onChangeView }
 				/>
 				<PageSizeMenu view={ view } onChangeView={ onChangeView } />
-			</DropdownMenuGroupV2>
-		</DropdownMenuV2>
+			</DropdownMenuGroupV2Ariakit>
+		</DropdownMenuV2Ariakit>
 	);
 }
