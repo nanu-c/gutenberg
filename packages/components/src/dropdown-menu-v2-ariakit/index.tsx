@@ -278,6 +278,7 @@ const UnconnectedDropdownMenu = (
 				store={ dropdownMenuStore }
 				gutter={ gutter ?? ( dropdownMenuStore.parent ? 16 : 8 ) }
 				shift={ shift ?? ( dropdownMenuStore.parent ? -8 : 0 ) }
+				// TODO: we may need to expose this
 				hideOnHoverOutside={ false }
 				data-side={ appliedPlacementSide }
 				variant={ variant }
