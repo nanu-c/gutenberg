@@ -18,6 +18,9 @@ import {
 import { useInstanceId } from '@wordpress/compose';
 import { __ } from '@wordpress/i18n';
 import { Icon, symbol } from '@wordpress/icons';
+// ignore restricted import ESLint error for apiFetch
+// eslint-disable-next-line no-restricted-imports
+import apiFetch from '@wordpress/api-fetch';
 
 /**
  * Internal dependencies
@@ -25,7 +28,6 @@ import { Icon, symbol } from '@wordpress/icons';
 import BlockPreview from '../block-preview';
 import InserterDraggableBlocks from '../inserter-draggable-blocks';
 import BlockPatternsPaging from '../block-patterns-paging';
-import apiFetch from '@wordpress/api-fetch';
 
 const WithToolTip = ( { showTooltip, title, children } ) => {
 	if ( showTooltip ) {
@@ -44,12 +46,11 @@ function BlockPattern( {
 } ) {
 	const [ isDragging, setIsDragging ] = useState( false );
 
-	const [ patternHTML, setPatternHTML ] = useState( '' );
-
 	const { content, blocks, viewportWidth } = pattern;
 	const instanceId = useInstanceId( BlockPattern );
 	const descriptionId = `block-editor-block-patterns-list__item-description-${ instanceId }`;
 
+	const [ patternHTML, setPatternHTML ] = useState( '' );
 	// post pattern content to the render_blocks endpoint
 	// and get back the rendered html
 	useEffect( () => {
@@ -64,7 +65,7 @@ function BlockPattern( {
 		getHTML().catch( ( error ) => {
 			return error;
 		} );
-	}, [ blocks ] );
+	}, [ blocks, content ] );
 
 	return (
 		<InserterDraggableBlocks
@@ -121,16 +122,11 @@ function BlockPattern( {
 								pattern.description ? descriptionId : undefined
 							}
 						>
-							{ /* <BlockPreview
+							<BlockPreview
 								blocks={ blocks }
+								html={ patternHTML }
 								viewportWidth={ viewportWidth }
-							/> */ }
-
-							<div
-								dangerouslySetInnerHTML={ {
-									__html: patternHTML,
-								} }
-							></div>
+							/>
 
 							<HStack className="block-editor-patterns__pattern-details">
 								{ pattern.id && ! pattern.syncStatus && (
