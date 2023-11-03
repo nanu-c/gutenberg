@@ -149,6 +149,7 @@ export default function HeaderEditMode( { setListViewToggleElement } ) {
 							isEnabled={
 								! isFocusMode && hasDefaultEditorCanvasView
 							}
+							showIconLabels={ showIconLabels }
 						>
 							{ ( { onClose } ) => (
 								<MenuGroup>
