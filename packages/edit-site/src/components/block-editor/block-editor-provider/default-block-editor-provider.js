@@ -12,6 +12,7 @@ import { store as editSiteStore } from '../../../store';
 import { unlock } from '../../../lock-unlock';
 import useSiteEditorSettings from '../use-site-editor-settings';
 import usePageContentBlocks from './use-page-content-blocks';
+import BlockPreview from '../../block-preview';
 
 const { ExperimentalBlockEditorProvider } = unlock( blockEditorPrivateApis );
 
@@ -59,7 +60,7 @@ export default function DefaultBlockEditorProvider( { children } ) {
 
 	return (
 		<ExperimentalBlockEditorProvider
-			settings={ settings }
+			settings={ { ...settings, blockPreview: BlockPreview } }
 			value={
 				isTemplateHidden && pageContentBlocks.length
 					? pageContentBlocks

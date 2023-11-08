@@ -6,7 +6,7 @@ import classnames from 'classnames';
 /**
  * WordPress dependencies
  */
-import { useState, forwardRef, useEffect } from '@wordpress/element';
+import { useState, forwardRef } from '@wordpress/element';
 import {
 	VisuallyHidden,
 	__unstableComposite as Composite,
@@ -18,9 +18,6 @@ import {
 import { useInstanceId } from '@wordpress/compose';
 import { __ } from '@wordpress/i18n';
 import { Icon, symbol } from '@wordpress/icons';
-// ignore restricted import ESLint error for apiFetch
-// eslint-disable-next-line no-restricted-imports
-import apiFetch from '@wordpress/api-fetch';
 
 /**
  * Internal dependencies
@@ -46,26 +43,9 @@ function BlockPattern( {
 } ) {
 	const [ isDragging, setIsDragging ] = useState( false );
 
-	const { content, blocks, viewportWidth } = pattern;
+	const { blocks, viewportWidth } = pattern;
 	const instanceId = useInstanceId( BlockPattern );
 	const descriptionId = `block-editor-block-patterns-list__item-description-${ instanceId }`;
-
-	const [ patternHTML, setPatternHTML ] = useState( '' );
-	// post pattern content to the render_blocks endpoint
-	// and get back the rendered html
-	useEffect( () => {
-		const getHTML = async () => {
-			const dataHTML = await apiFetch( {
-				path: '/wp/v2/render_blocks',
-				method: 'POST',
-				data: content,
-			} );
-			setPatternHTML( dataHTML );
-		};
-		getHTML().catch( ( error ) => {
-			return error;
-		} );
-	}, [ blocks, content ] );
 
 	return (
 		<InserterDraggableBlocks
@@ -124,7 +104,6 @@ function BlockPattern( {
 						>
 							<BlockPreview
 								blocks={ blocks }
-								html={ patternHTML }
 								viewportWidth={ viewportWidth }
 							/>
 
