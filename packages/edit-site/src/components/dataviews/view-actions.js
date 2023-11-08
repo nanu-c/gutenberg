@@ -55,6 +55,7 @@ function ViewTypeMenu( { view, onChangeView } ) {
 					{ __( 'Layout' ) }
 				</DropdownMenuItemV2Ariakit>
 			}
+			placement="left-start"
 		>
 			{ availableViews.map( ( availableView ) => {
 				return (
@@ -92,6 +93,7 @@ function PageSizeMenu( { view, onChangeView } ) {
 					{ __( 'Rows per page' ) }
 				</DropdownMenuItemV2Ariakit>
 			}
+			placement="left-start"
 		>
 			{ PAGE_SIZE_VALUES.map( ( size ) => {
 				return (
@@ -128,6 +130,7 @@ function FieldsVisibilityMenu( { view, onChangeView, fields } ) {
 					{ __( 'Fields' ) }
 				</DropdownMenuItemV2Ariakit>
 			}
+			placement="left-start"
 		>
 			{ hidableFields?.map( ( field ) => {
 				return (
@@ -185,6 +188,7 @@ function SortMenu( { fields, view, onChangeView } ) {
 					{ __( 'Sort by' ) }
 				</DropdownMenuItemV2Ariakit>
 			}
+			placement="left-start"
 		>
 			{ sortableFields?.map( ( field ) => {
 				const sortedDirection = view.sort?.direction;
