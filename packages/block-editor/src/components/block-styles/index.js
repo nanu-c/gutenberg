@@ -99,7 +99,7 @@ function BlockStyles( { clientId, onSwitch = noop, onHoverClassName = noop } ) {
 			{ hoveredStyle && ! isMobileViewport && (
 				<Popover
 					placement="left-start"
-					offset={ 20 }
+					offset={ 34 }
 					focusOnMount={ false }
 				>
 					<div
