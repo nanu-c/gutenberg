@@ -7,7 +7,7 @@ import type { Meta, StoryFn } from '@storybook/react';
  * WordPress dependencies
  */
 import { wordpress, more, link } from '@wordpress/icons';
-import { useState } from '@wordpress/element';
+import { useContext, useState } from '@wordpress/element';
 
 /**
  * Internal dependencies
@@ -358,3 +358,114 @@ const TabGetsRemovedTemplate: StoryFn< typeof Tabs > = ( props ) => {
 	);
 };
 export const TabGetsRemoved = TabGetsRemovedTemplate.bind( {} );
+
+// TODO: This is a temporary story to attempt to recreate some issues experienced in
+// the editor. It should be removed before the PR merges.
+const SlotFillProbTemplate: StoryFn< typeof Tabs > = ( props ) => {
+	function MockComplementaryAreaSlot( { ...slotProps } ) {
+		return <Slot name="best-fill-ever" { ...slotProps } />;
+	}
+
+	function MockComplementaryAreaFill( {
+		children,
+	}: {
+		children: React.ReactNode;
+	} ) {
+		return (
+			<Fill name="best-fill-ever">
+				<div className={ 'fill-div' }>{ children }</div>
+			</Fill>
+		);
+	}
+
+	const MockComplementaryAreaHeader = ( {
+		children,
+	}: {
+		children: React.ReactNode;
+	} ) => {
+		return <>{ children }</>;
+	};
+
+	const MockComplementaryArea = ( {
+		children,
+		header,
+	}: {
+		children: React.ReactNode;
+		header: React.ReactNode;
+	} ) => {
+		return (
+			<>
+				<MockComplementaryAreaFill>
+					<MockComplementaryAreaHeader>
+						{ header }
+					</MockComplementaryAreaHeader>
+					{ children }
+				</MockComplementaryAreaFill>
+			</>
+		);
+	};
+
+	const MockSettingsHeader = () => {
+		return (
+			<>
+				<Tabs.TabList>
+					<Tabs.Tab id={ 'tab1' }>Tab 1</Tabs.Tab>
+					<Tabs.Tab id={ 'tab2' }>Tab 2</Tabs.Tab>
+					<Tabs.Tab id={ 'tab3' }>Tab 3</Tabs.Tab>
+				</Tabs.TabList>
+			</>
+		);
+	};
+	const MockPluginSidebarEditPost = ( {
+		children,
+		header,
+	}: {
+		children: React.ReactNode;
+		header: React.ReactNode;
+	} ) => {
+		return (
+			<MockComplementaryArea header={ header }>
+				{ children }
+			</MockComplementaryArea>
+		);
+	};
+
+	const Content = () => {
+		const tabsContextValue = useContext( Tabs.Context );
+
+		return (
+			<MockPluginSidebarEditPost
+				header={
+					<Tabs.Context.Provider value={ tabsContextValue }>
+						<MockSettingsHeader />
+					</Tabs.Context.Provider>
+				}
+			>
+				<Tabs.Context.Provider value={ tabsContextValue }>
+					<Tabs.TabPanel id={ 'tab1' }>
+						<p>Selected tab: Tab 1</p>
+					</Tabs.TabPanel>
+					<Tabs.TabPanel id={ 'tab2' }>
+						<p>Selected tab: Tab 2</p>
+					</Tabs.TabPanel>
+					<Tabs.TabPanel id={ 'tab3' }>
+						<p>Selected tab: Tab 3</p>
+					</Tabs.TabPanel>
+				</Tabs.Context.Provider>
+			</MockPluginSidebarEditPost>
+		);
+	};
+
+	return (
+		<>
+			<SlotFillProvider>
+				<Tabs { ...props }>
+					<Content />
+				</Tabs>
+				<MockComplementaryAreaSlot />
+			</SlotFillProvider>
+		</>
+	);
+};
+
+export const SlotFillProblemExample = SlotFillProbTemplate.bind( {} );
