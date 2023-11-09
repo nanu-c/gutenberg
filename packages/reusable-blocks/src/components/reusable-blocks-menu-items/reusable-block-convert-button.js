@@ -186,7 +186,7 @@ export default function ReusableBlockConvertButton( {
 							<ToggleControl
 								label={ __( 'Synced' ) }
 								help={ __(
-									'Sync this pattern across multiple locations..'
+									'Sync this pattern across multiple locations.'
 								) }
 								checked={ ! syncType }
 								onChange={ () => {
