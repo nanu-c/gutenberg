@@ -111,7 +111,7 @@ export function PostSyncStatusModal() {
 							<ToggleControl
 								label={ __( 'Synced' ) }
 								help={ __(
-									'Editing the pattern will update it anywhere it is used.'
+									'Sync this pattern across multiple locations.'
 								) }
 								checked={ ! syncType }
 								onChange={ () => {
