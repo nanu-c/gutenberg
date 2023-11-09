@@ -6,24 +6,24 @@ import { __ } from '@wordpress/i18n';
 /**
  * Internal dependencies
  */
-import { default as InFilter, OPERATOR_IN } from './in-filter';
+import { default as InFilter } from './in-filter';
 import ResetFilters from './reset-filters';
 
-const VALID_OPERATORS = [ OPERATOR_IN ];
+const ENUMERATION_TYPE = 'enumeration';
 
 export default function Filters( { fields, view, onChangeView } ) {
 	const filtersRegistered = [];
 	fields.forEach( ( field ) => {
-		if ( ! field.filters ) {
+		if ( ! field.type ) {
 			return;
 		}
 
-		field.filters.forEach( ( filter ) => {
-			if ( VALID_OPERATORS.some( ( operator ) => operator === filter ) ) {
+		switch ( field.type ) {
+			case ENUMERATION_TYPE:
 				filtersRegistered.push( {
 					field: field.id,
 					name: field.header,
-					operator: filter,
+					type: field.type,
 					elements: [
 						{
 							value: '',
@@ -32,8 +32,7 @@ export default function Filters( { fields, view, onChangeView } ) {
 						...( field.elements || [] ),
 					],
 				} );
-			}
-		} );
+		}
 	} );
 
 	const visibleFilters = view.visibleFilters
@@ -47,11 +46,11 @@ export default function Filters( { fields, view, onChangeView } ) {
 			}
 
 			return visibleFiltersForField.map( ( filter ) => {
-				if ( OPERATOR_IN === filter.operator ) {
+				if ( ENUMERATION_TYPE === filter.type ) {
 					return (
 						<InFilter
-							key={ fieldName + '.' + filter.operator }
-							filter={ visibleFiltersForField[ 0 ] }
+							key={ fieldName + '.' + filter.type }
+							filter={ filter }
 							view={ view }
 							onChangeView={ onChangeView }
 						/>
