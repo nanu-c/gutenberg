@@ -1704,7 +1704,11 @@ class WP_Theme_JSON_Gutenberg {
 				continue;
 			}
 			foreach ( $preset_per_origin[ $origin ] as $preset ) {
-				$slug = _wp_to_kebab_case( $preset['slug'] );
+				if ( ! empty( $preset['fontFace'] ) ){
+					$slug = $preset['slug'];
+				} else {
+					$slug = _wp_to_kebab_case( $preset['slug'] );
+				}
 
 				$value = '';
 				if ( isset( $preset_metadata['value_key'], $preset[ $preset_metadata['value_key'] ] ) ) {
@@ -1750,7 +1754,11 @@ class WP_Theme_JSON_Gutenberg {
 				continue;
 			}
 			foreach ( $preset_per_origin[ $origin ] as $preset ) {
-				$slug = _wp_to_kebab_case( $preset['slug'] );
+				if ( ! empty( $preset['fontFace'] ) ){
+					$slug = $preset['slug'];
+				} else {
+					$slug = _wp_to_kebab_case( $preset['slug'] );
+				}
 
 				// Use the array as a set so we don't get duplicates.
 				$result[ $slug ] = $slug;
