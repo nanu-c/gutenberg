@@ -12,7 +12,6 @@ import {
 	getTypographyFontSizeValue,
 	getFluidTypographyOptionsFromSettings,
 } from '../components/global-styles/typography-utils';
-import { kebabCase } from '../utils/object';
 
 /*
  * This utility is intended to assist where the serialization of the typography
@@ -43,7 +42,7 @@ export function getTypographyClassesAndStyles( attributes, settings ) {
 
 	const style = getInlineStyles( { typography: typographyStyles } );
 	const fontFamilyClassName = !! attributes?.fontFamily
-		? `has-${ kebabCase( attributes.fontFamily ) }-font-family`
+		? `has-${ attributes.fontFamily }-font-family`
 		: '';
 
 	const className = classnames(

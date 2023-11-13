@@ -10,7 +10,6 @@ import TokenList from '@wordpress/token-list';
  */
 import { shouldSkipSerialization } from './utils';
 import { TYPOGRAPHY_SUPPORT_KEY } from './typography';
-import { kebabCase } from '../utils/object';
 
 export const FONT_FAMILY_SUPPORT_KEY = 'typography.__experimentalFontFamily';
 
@@ -67,7 +66,7 @@ function addSaveProps( props, blockType, attributes ) {
 
 	// Use TokenList to dedupe classes.
 	const classes = new TokenList( props.className );
-	classes.add( `has-${ kebabCase( attributes?.fontFamily ) }-font-family` );
+	classes.add( `has-${ attributes?.fontFamily }-font-family` );
 	const newClassName = classes.value;
 	props.className = newClassName ? newClassName : undefined;
 

@@ -83,10 +83,12 @@ function getPresetsDeclarations( blockPresets = {}, mergedSettings ) {
 				if ( presetByOrigin[ origin ] ) {
 					presetByOrigin[ origin ].forEach( ( value ) => {
 						if ( valueKey && ! valueFunc ) {
+							let slug = kebabCase( value.slug );
+							if ( valueKey === 'fontFamily' ) {
+								slug = value.slug;
+							}
 							declarations.push(
-								`--wp--preset--${ cssVarInfix }--${ kebabCase(
-									value.slug
-								) }: ${ value[ valueKey ] }`
+								`--wp--preset--${ cssVarInfix }--${ slug }: ${ value[ valueKey ] }`
 							);
 						} else if (
 							valueFunc &&
