@@ -1,7 +1,7 @@
 /**
  * WordPress dependencies
  */
-import { __ } from '@wordpress/i18n';
+import { BaseControl } from '@wordpress/components';
 
 /**
  * Internal dependencies
@@ -24,13 +24,7 @@ export default function Filters( { fields, view, onChangeView } ) {
 					field: field.id,
 					name: field.header,
 					operator: filter,
-					elements: [
-						{
-							value: '',
-							label: __( 'All' ),
-						},
-						...( field.elements || [] ),
-					],
+					elements: field.elements || [],
 				} );
 			}
 		} );
@@ -49,12 +43,14 @@ export default function Filters( { fields, view, onChangeView } ) {
 			return visibleFiltersForField.map( ( filter ) => {
 				if ( OPERATOR_IN === filter.operator ) {
 					return (
-						<InFilter
-							key={ fieldName + '.' + filter.operator }
-							filter={ visibleFiltersForField[ 0 ] }
-							view={ view }
-							onChangeView={ onChangeView }
-						/>
+						<BaseControl>
+							<InFilter
+								key={ fieldName + '.' + filter.operator }
+								filter={ visibleFiltersForField[ 0 ] }
+								view={ view }
+								onChangeView={ onChangeView }
+							/>
+						</BaseControl>
 					);
 				}
 				return null;
