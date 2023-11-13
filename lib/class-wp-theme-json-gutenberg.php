@@ -1705,8 +1705,8 @@ class WP_Theme_JSON_Gutenberg {
 			}
 			foreach ( $preset_per_origin[ $origin ] as $preset ) {
 				$slug = _wp_to_kebab_case( $preset['slug'] );
-				
-				if ( ! empty( $preset['fontFamily'] ) ){
+
+				if ( ! empty( $preset['fontFamily'] ) ) {
 					$slug = $preset['slug'];
 				}
 
@@ -1756,7 +1756,7 @@ class WP_Theme_JSON_Gutenberg {
 			foreach ( $preset_per_origin[ $origin ] as $preset ) {
 				$slug = _wp_to_kebab_case( $preset['slug'] );
 
-				if ( ! empty( $preset['fontFamily'] ) ){
+				if ( ! empty( $preset['fontFamily'] ) ) {
 					$slug = $preset['slug'];
 				}
 
