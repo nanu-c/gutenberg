@@ -159,9 +159,8 @@ export function makeFormDataFromFontFamilies( fontFamilies ) {
 					! name.includes( "'" )
 				) {
 					return `'${ name }'`;
-				} else {
-					return name;
 				}
+				return name;
 			} );
 
 			if ( formattedFontFamilies.length > 1 ) {
