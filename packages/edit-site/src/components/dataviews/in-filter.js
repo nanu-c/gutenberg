@@ -6,7 +6,7 @@ import {
 	privateApis as componentsPrivateApis,
 	Icon,
 } from '@wordpress/components';
-import { check } from '@wordpress/icons';
+import { check, chevronDown } from '@wordpress/icons';
 import { __, sprintf } from '@wordpress/i18n';
 
 /**
@@ -19,37 +19,45 @@ export const OPERATOR_IN = 'in';
 const { DropdownMenuV2, DropdownMenuItemV2 } = unlock( componentsPrivateApis );
 
 export default ( { filter, view, onChangeView } ) => {
-	const filterLabel = sprintf(
-		/* translators: filter name. */
-		__( '%s is' ),
-		filter.name
-	);
+	const defaultElement = {
+		value: '',
+		label: __( 'All' ),
+	};
 
-	const elements = [
-		{
-			value: '',
-			label: __( 'All' ),
-		},
-		...filter.elements,
-	];
+	const elements = [ defaultElement, ...filter.elements ];
 
 	const filterInView = view.filters.find( ( f ) => f.field === filter.field );
+	const activeElement =
+		elements.find( ( element ) => element.value === filterInView?.value ) ||
+		defaultElement;
 
 	return (
 		<DropdownMenuV2
 			key={ filter.field }
-			label={ filterLabel }
-			trigger={ <Button variant="tertiary">{ filterLabel }</Button> }
+			label={ filter.name }
+			trigger={
+				<Button variant="tertiary">
+					{ activeElement.label !== defaultElement.label
+						? sprintf(
+								/* translators: 1: Filter name. 2: filter value. e.g.: "Author is Admin". */
+								__( '%1$s is %2$s' ),
+								filter.name,
+								activeElement.label
+						  )
+						: filter.name }
+					<Icon icon={ chevronDown } />
+				</Button>
+			}
 		>
 			{ elements.map( ( element ) => {
-				const isActive =
-					filterInView?.value === element.value ||
-					( filterInView === undefined && element.value === '' );
-
 				return (
 					<DropdownMenuItemV2
 						key={ element.value }
-						suffix={ isActive && <Icon icon={ check } /> }
+						suffix={
+							activeElement.value === element.value && (
+								<Icon icon={ check } />
+							)
+						}
 						onSelect={ () =>
 							onChangeView( ( currentView ) => ( {
 								...currentView,
