@@ -42,9 +42,15 @@ export type SlotComponentProps =
 
 			/**
 			 * className.
-			 * Not supported when `bubblesVirtually` is true.
+			 * Not supported when `bubblesVirtually` is false.
 			 */
 			className?: string;
+
+			/**
+			 * styles.
+			 * Not supported when `bubblesVirtually` is false.
+			 */
+			style?: React.CSSProperties;
 	  } )
 	| ( SlotPropBase & {
 			/**
@@ -65,6 +71,12 @@ export type SlotComponentProps =
 			 * Not supported when `bubblesVirtually` is false.
 			 */
 			className?: never;
+
+			/**
+			 * styles.
+			 * Not supported when `bubblesVirtually` is false.
+			 */
+			style?: never;
 	  } );
 
 export type FillComponentProps = {
