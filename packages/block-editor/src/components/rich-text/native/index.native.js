@@ -197,9 +197,7 @@ export class RichText extends Component {
 		const { formats, replacements, text } = currentValue;
 		const { activeFormats } = this.state;
 		const newFormats = getFormatColors(
-			typeof value === 'string'
-				? value
-				: toHTMLString( { value: create( { html: value } ) } ),
+			typeof value === 'string' ? value : value.toString(),
 			formats,
 			colorPalette
 		);
