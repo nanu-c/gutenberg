@@ -68,7 +68,8 @@ function cloneObject( object ) {
 		return object.map( cloneObject );
 	}
 
-	if ( object && typeof object === 'object' ) {
+	// Only clone plain objects.
+	if ( object?.constructor?.name === 'Object' ) {
 		return {
 			...Object.fromEntries(
 				Object.entries( object ).map( ( [ key, value ] ) => [
