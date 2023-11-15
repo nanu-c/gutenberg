@@ -486,7 +486,7 @@ attributes: {
 edit: function( props ) {
 	var blockProps = wp.blockEditor.useBlockProps();
 
-	return React.createEleement(
+	return React.createElement(
 		'div',
 		blockProps,
 		React.createElement(
